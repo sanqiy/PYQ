@@ -1,0 +1,168 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{php}
+/**
+ * Legacy setup page content.
+ */
+$avatar = assetUrl($user['img'] ?? '');
+$name = $user['name'] ?? ($user['username'] ?? '');
+$sign = $user['sign'] ?? '';
+$url = $user['url'] ?? '';
+$email = $user['email'] ?? '';
+$username = $user['username'] ?? '';
+$canPost = in_array((string)($user['essqx'] ?? '0'), ['1', '2'], true);
+$mailNotify = isFlag($user['esseam'] ?? 0) === 1;
+$postSwitchStyle = $canPost ? 'background: var(--theme);justify-content: flex-end' : 'background: rgb(238 238 238);justify-content: flex-start';
+$mailSwitchStyle = $mailNotify ? 'background: var(--theme);justify-content: flex-end' : 'background: rgb(238 238 238);justify-content: flex-start';
+$mailSwitchValue = $mailNotify ? '1' : '0';
+$alipayQr = assetUrl($user['alipay_qr'] ?? '');
+$wechatQr = assetUrl($user['wechat_qr'] ?? '');
+{/php}
+
+<div class="sh-setup-main-xbb" id="setuptx" lang="60">
+    <div class="setup-main-lieb-xtitle" onclick="setuptx()">
+        <span>头像</span>
+        <div class="setup-main-lieb-title-y">
+            <img src="/assets/img/thumbnail.svg" data-src="{$avatar}" id="setup-main-lieb-qx-imgt" class="setup-main-lieb-title-y-imgt" alt="">
+            <i class="iconfont icon-weibiaotiy al-sxbh-setup1" id="setup-main-lieb-qtx-img"></i>
+        </div>
+    </div>
+    <form action="/api/user/avatar" method="post" enctype="multipart/form-data" class="setup-main-lieb-xcontent">
+        <input type="hidden" name="allkey" value="{$allkey|default=''}">
+        <div class="sh-setup-formup">
+            <img src="/assets/img/thumbnail.svg" data-src="" id="setup-formup-img" alt="">
+            <span class="cupload-upload-btn" id="cupload-upload-btn">+</span>
+            <input type="file" name="file" accept="image/*" id="files" required>
+        </div>
+        <div id="sctxs"><input type="submit" class="setup-main-tj" name="submit" value="上传" onclick="sctxs()"></div>
+    </form>
+</div>
+
+<div class="sh-setup-main-xb" id="setupnc" lang="45">
+    <div class="setup-main-lieb-xtitlee" onclick="setupnc()">
+        <span>昵称</span>
+        <div class="setup-main-lieb-title-y">
+            <p id="setup-main-lieb-title-y-usernc">{$name}</p>
+            <i class="iconfont icon-weibiaotiy al-sxbh-setup1" id="setup-main-lieb-qnc-img"></i>
+        </div>
+    </div>
+    <div class="setup-main-lieb-xcontent">
+        <input type="text" id="usernc" value="{$name}" placeholder="设置昵称" minlength="1" maxlength="10" spellcheck="false">
+        <div class="setup-main-lieb-xgxan" id="zhnc" onclick="zhnc()"><span>更新</span></div>
+    </div>
+</div>
+
+<div class="sh-setup-main-xb" id="setupqm" lang="45">
+    <div class="setup-main-lieb-xtitlee" onclick="setupqm()">
+        <span>签名</span>
+        <div class="setup-main-lieb-title-y">
+            <p id="setup-main-lieb-title-y-userqm">{$sign}</p>
+            <i class="iconfont icon-weibiaotiy al-sxbh-setup1" id="setup-main-lieb-qqm-img"></i>
+        </div>
+    </div>
+    <div class="setup-main-lieb-xcontent">
+        <input type="text" id="userqm" value="{$sign}" placeholder="设置签名" minlength="1" maxlength="50" spellcheck="false">
+        <div class="setup-main-lieb-xgxan" id="zhqm" onclick="zhqm()"><span>更新</span></div>
+    </div>
+</div>
+
+<div class="sh-setup-main-xb" id="setupwz" lang="45">
+    <div class="setup-main-lieb-xtitlee" onclick="setupwz()">
+        <span>网址</span>
+        <div class="setup-main-lieb-title-y">
+            <p id="setup-main-lieb-title-y-userurl">{$url}</p>
+            <i class="iconfont icon-weibiaotiy al-sxbh-setup1" id="setup-main-lieb-qwz-img"></i>
+        </div>
+    </div>
+    <div class="setup-main-lieb-xcontent">
+        <input type="url" id="userurl" value="{$url}" placeholder="填写您的网站" minlength="1" spellcheck="false">
+        <div class="setup-main-lieb-xgxan" id="zhwz" onclick="zhwz()"><span>更新</span></div>
+    </div>
+</div>
+
+<div class="setup-main-lieb" id="setup-main-lieb-aq" lang="45">
+    <div class="setup-main-lieb-title" onclick="anquan()">
+        <span>安全中心</span>
+        <i class="iconfont icon-weibiaotiy al-sxbh-setup" id="setup-main-lieb-aq-img"></i>
+    </div>
+    <div class="setup-main-lieb-content">
+        <span>账号</span>
+        <input type="text" id="userzh" value="{$username}" placeholder="账号不可更改" readonly disabled>
+    </div>
+    <div class="setup-main-lieb-content">
+        <span>旧密码</span>
+        <input type="password" id="usermm" value="" placeholder="输入旧密码" minlength="3" maxlength="16" spellcheck="false">
+    </div>
+    <div class="setup-main-lieb-content">
+        <span>新密码</span>
+        <input type="text" id="userxmm" value="" placeholder="输入新密码" minlength="3" maxlength="16" spellcheck="false">
+    </div>
+    <div class="setup-main-lieb-content">
+        <span>邮箱</span>
+        <input type="email" id="userem" value="{$email}" placeholder="设置您的邮箱" spellcheck="false">
+    </div>
+    <div class="setup-main-lieb-gxan" id="zhyanxg" onclick="zhyanxg()"><span>更新</span></div>
+</div>
+
+<div class="setup-main-lieb" id="setup-main-lieb-qx" lang="45">
+    <div class="setup-main-lieb-title" onclick="quanxian()">
+        <span>权限管理</span>
+        <i class="iconfont icon-weibiaotiy al-sxbh-setup" id="setup-main-lieb-qx-img"></i>
+    </div>
+    <div class="setup-main-lieb-content-kg">
+        <span>文章发布权限</span>
+        <div class="setup-main-lieb-content-kg-an">
+            <div class="setup-main-lieb-content-kg-an-xin" style="{$postSwitchStyle};cursor: not-allowed;"><p></p></div>
+        </div>
+    </div>
+    <div class="setup-main-lieb-content-kg">
+        <span>接收邮件通知</span>
+        <div class="setup-main-lieb-content-kg-an">
+            <div id="emaitz" onclick="emailkq()" class="setup-main-lieb-content-kg-an-xin" style="{$mailSwitchStyle}" lang="{$mailSwitchValue}"><p></p></div>
+        </div>
+    </div>
+</div>
+
+<div class="setup-main-lieb" id="setup-main-lieb-ds" lang="45">
+    <div class="setup-main-lieb-title" onclick="toggleSection('ds')">
+        <span>收款码设置</span>
+        <i class="iconfont icon-weibiaotiy al-sxbh-setup" id="setup-main-lieb-ds-img"></i>
+    </div>
+    <div class="setup-main-lieb-content" style="flex-direction:column;align-items:center;gap:16px;padding:16px 0">
+        <div style="display:flex;gap:30px;flex-wrap:wrap;justify-content:center">
+            <div class="sh-setup-qr-item">
+                <div class="sh-setup-qr-label">支付宝收款码</div>
+                <div class="sh-setup-qr-preview" id="alipayQrPreview">
+                    {if condition="$alipayQr"}<img src="{$alipayQr}" alt="支付宝收款码">{else /}<span class="sh-setup-qr-empty">未上传</span>{/if}
+                </div>
+                <label class="sh-setup-qr-btn">
+                    <span>{if condition="$alipayQr"}更换{else /}上传{/if}</span>
+                    <input type="file" accept="image/*" onchange="uploadQr('alipay', this)" style="display:none">
+                </label>
+            </div>
+            <div class="sh-setup-qr-item">
+                <div class="sh-setup-qr-label">微信收款码</div>
+                <div class="sh-setup-qr-preview" id="wechatQrPreview">
+                    {if condition="$wechatQr"}<img src="{$wechatQr}" alt="微信收款码">{else /}<span class="sh-setup-qr-empty">未上传</span>{/if}
+                </div>
+                <label class="sh-setup-qr-btn">
+                    <span>{if condition="$wechatQr"}更换{else /}上传{/if}</span>
+                    <input type="file" accept="image/*" onchange="uploadQr('wechat', this)" style="display:none">
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="setup-main-lieb-logout" onclick="logut()">
+    <p>退出登录</p>
+</div>
+
+<div class="setup-main-lieb-logout" onclick="logoutAllDevices()">
+    <p>退出所有设备</p>
+</div>

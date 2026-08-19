@@ -1,0 +1,38 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+<!-- Floating music player -->
+{php}$musplay = (string)($siteConfig['musplay'] ?? '0');{/php}
+{eq name="musplay" value="0"}
+<div class="musicbc" id="musicbc" style="width:70px;height:100px;border-radius: 8px;" lang="1">
+    <img class="mimg" src="/assets/img/thumbnail.svg" data-src="/assets/img/musicba.jpg" alt="" id="ming" style="width:100%;height: 100px;">
+    <div class="muka" style="flex-direction: column;width:100%;height:100px">
+        <div class="musicimg" id="musicimg" style="width: 100%;height: 70%;">
+            <img src="/assets/img/thumbnail.svg" data-src="/assets/img/musicba.jpg" alt="" id="yszt" lang="0" style="border-radius: 0px;animation:rotate 0s infinite linear;">
+        </div>
+        <div class="musiccz" style="width: 100%;height:30%;margin-left: 0px;justify-content: space-around;">
+            <audio id="musicplay" src="" type="audio/mp3" controls="controls" style="display: none;" lang="0" class="">您的浏览器不支持音频元素。</audio>
+            <div class="musiccz-btn" onclick="bfpy()" style="margin-right: 0px;"><i class="iconfont icon-jixu ri-z-sx" id="sh-musiccz-zb" lang="0" data-bfzt="bb" style="font-size: 18px;"></i></div>
+            <div class="musiccz-btn" onclick="bfpg()" style="margin-right: 0px;"><i class="iconfont icon-quxiao ri-z-sx" id="sh-musiccz-bf" lang="0" data-bfzt="bb" style="font-size: 16px;"></i></div>
+        </div>
+    </div>
+</div>
+{else/}
+<div class="musicbc" id="musicbc">
+    <img class="mimg" src="/assets/img/thumbnail.svg" data-src="/assets/img/musicba.jpg" alt="" id="ming">
+    <div class="muka">
+        <div class="musicimg">
+            <img src="/assets/img/thumbnail.svg" data-src="/assets/img/musicba.jpg" alt="" onclick="mbpy()" id="yszt" lang="0">
+        </div>
+        <div class="musiccz">
+            <audio id="musicplay" src="" type="audio/mp3" controls="controls" style="display: none;" lang="0" class="">您的浏览器不支持音频元素。</audio>
+            <div class="musiccz-btn" onclick="bfpy()"><i class="iconfont icon-jixu ri-z-sx" id="sh-musiccz-zb" lang="0" data-bfzt="bb"></i></div>
+            <div class="musiccz-btn" onclick="bfpg()"><i class="iconfont icon-quxiao ri-z-sx" id="sh-musiccz-bf" lang="0" data-bfzt="bb" style="font-size: 18px;"></i></div>
+        </div>
+    </div>
+</div>
+{/eq}

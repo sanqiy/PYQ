@@ -1,0 +1,41 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{php}
+$lnkztFlag = isFlag($siteConfig['lnkzt'] ?? 0);
+$links = $links ?? [];
+$linkCount = count($links);
+{/php}
+{if condition="$lnkztFlag === 0"}
+<div class="sh-link" id="sh-link" onclick="gblink()">
+    <div class="sh-link-main" id="sh-link-main" onclick="hfljurl()">
+        <div class="sh-link-main-top">
+            <div class="sh-news-main-top-xiaoxih"><span>我的朋友</span></div>
+            <div class="sh-news-main-top-div" onclick="gblink()"><i class="iconfont icon-quxiao ri-sxhqx"></i></div>
+        </div>
+        <div class="sh-link-con">
+            {volist name="links" id="link"}
+            {php}
+            $linkImgRaw = trim((string)($link['urlimg'] ?? ''));
+            $linkImage = ($linkImgRaw !== '' && $linkImgRaw !== '0') ? assetUrl($linkImgRaw) : '/assets/img/tx.png';
+            {/php}
+            <a href="{:sanitizeUrl($link['url'])}" class="sh-link-con-lie" target="_blank">
+                <div class="sh-link-con-lie-left">
+                    <img src="/assets/img/thumbnail.svg" data-src="{$linkImage}" data-fallback="/assets/img/tx.png" alt="" class="sh-link-con-lie-left-img">
+                </div>
+                <div class="sh-link-con-lie-right">
+                    <p class="sh-link-con-lie-right-title">{$link.urls}</p>
+                </div>
+            </a>
+            {/volist}
+        </div>
+        <div class="sh-link-tishi">
+            <p>共{$linkCount}个朋友</p>
+        </div>
+    </div>
+</div>
+{/if}

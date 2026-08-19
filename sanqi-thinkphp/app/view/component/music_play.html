@@ -1,0 +1,43 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{php}
+/**
+ * Music player component.
+ * Variables: $mus, $cid
+ */
+$musicUrl = $mus[0] ?? '';
+$songName = $mus[1] ?? '';
+$artist = $mus[2] ?? '';
+$coverUrl = !empty($mus[3]) ? assetUrl($mus[3]) : '/assets/img/musicba.jpg';
+if (is_numeric((string)$musicUrl)) {
+    $musicUrl = '/api/music/kuwo-proxy?id=' . $musicUrl;
+} elseif (preg_match('/kuwo\.cn\/.*(?:music\/src|play_detail)\/(\d+)/i', (string)$musicUrl, $m)) {
+    $musicUrl = '/api/music/kuwo-proxy?id=' . $m[1];
+} elseif (preg_match('/(?:hash=|\/)([a-fA-F0-9]{32})(?:[&\/.]|$)/i', (string)$musicUrl, $m)) {
+    $musicUrl = '/api/music/kugou-proxy?hash=' . strtoupper($m[1]);
+}
+{/php}
+<!--音乐-->
+<div class="music-play">
+    <div class="music-play-conten">
+        <img class="mimg" src="/assets/img/thumbnail.svg" data-src="{$coverUrl}" alt="" style="width: 110%;height: 110%;position: absolute;pointer-events: none;filter: brightness(80%) saturate(150%) blur(10px);-webkit-filter: brightness(80%) saturate(150%) blur(10px);z-index: 0;">
+        <div class="music-play-conten-left">
+            <div class="music-play-conten-left-bg" style="background-image: url({$coverUrl});"></div>
+        </div>
+        <div class="music-play-conten-right">
+            <div class="music-play-conten-right-z">
+                <span class="conten-right-z-bt">{$songName}</span>
+                <span class="conten-right-z-nr">{$artist}</span>
+            </div>
+            <div class="music-play-conten-right-y">
+                <div class="conten-right-y-tb" lang="{$cid}" onclick="audbf()"><i class="iconfont icon-jixu" id="sh-aud-left-plak-{$cid}" lang="0"></i></div>
+                <i id="musicurl-{$cid}" lang="{:assetUrl($musicUrl)}" class="{$coverUrl}" style="display: none;"></i>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,220 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{extend name="admin/layout" /}
+
+{block name="content"}
+<form id="emailForm">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">邮件设置</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">邮件驱动</label>
+                        <select class="form-select" id="emtype" name="emtype">
+                            <option value="smtp" {:($siteConfig['emtype'] ?? 'smtp') === 'smtp' ? 'selected' : ''}>SMTP</option>
+                            <option value="aliyun" {:($siteConfig['emtype'] ?? 'smtp') === 'aliyun' ? 'selected' : ''}>阿里云邮件推送</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SMTP 配置 -->
+            <div id="fields_smtp" class="driver-fields">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">SMTP配置</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">SMTP主机</label>
+                            <input type="text" class="form-control" name="emydz" value="{$siteConfig.emydz|default=''}">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">端口</label>
+                                <input type="number" class="form-control" name="emduk" value="{$siteConfig.emduk|default=''}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">加密方式</label>
+                                <select class="form-select" name="emssl">
+                                    <option value="auto" {:($siteConfig['emssl'] ?? 'auto') === 'auto' ? 'selected' : ''}>自动（推荐）</option>
+                                    <option value="ssl" {:($siteConfig['emssl'] ?? '') === 'ssl' ? 'selected' : ''}>SSL</option>
+                                    <option value="tls" {:($siteConfig['emssl'] ?? '') === 'tls' ? 'selected' : ''}>TLS</option>
+                                    <option value="" {:($siteConfig['emssl'] ?? '') === '' ? 'selected' : ''}>无</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">SMTP账号</label>
+                            <input type="text" class="form-control" name="emzh" value="{$siteConfig.emzh|default=''}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">SMTP密码</label>
+                            <input type="password" class="form-control" name="emkey" value="{$siteConfig.emkey|default=''}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">发件人设置</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">发件邮箱</label>
+                            <input type="email" class="form-control" name="emfs" value="{$siteConfig.emfs|default=''}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">发件人名称</label>
+                            <input type="text" class="form-control" name="emfszm" value="{$siteConfig.emfszm|default=''}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 阿里云邮件推送配置 -->
+            <div id="fields_aliyun" class="driver-fields" style="display:none;">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">阿里云邮件推送配置</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">AccessKey ID</label>
+                            <input type="text" class="form-control" name="aliyun_key" value="{$siteConfig.aliyun_key|default=''}" placeholder="阿里云AccessKey ID">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">AccessKey Secret</label>
+                            <input type="password" class="form-control" name="aliyun_secret" value="{$siteConfig.aliyun_secret|default=''}" placeholder="阿里云AccessKey Secret">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">发信地址</label>
+                            <input type="email" class="form-control" name="aliyun_from" value="{$siteConfig.aliyun_from|default=''}" placeholder="例如：noreply@example.com">
+                            <div class="form-text">需在阿里云控制台已验证的发信地址</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">发件人名称</label>
+                            <input type="text" class="form-control" name="emfszm" value="{$siteConfig.emfszm|default=''}">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">使用说明</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-0">
+                            <ol class="mb-0">
+                                <li>登录<a href="https://dm.console.aliyun.com/" target="_blank">阿里云邮件推送控制台</a></li>
+                                <li>完成发信域名验证</li>
+                                <li>添加发信地址</li>
+                                <li>在<a href="https://ram.console.aliyun.com/" target="_blank">RAM控制台</a>创建AccessKey</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">操作</h5>
+                </div>
+                <div class="card-body">
+                    <button type="submit" class="btn btn-primary w-100 mb-3">保存设置</button>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">测试邮件</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">测试邮箱</label>
+                        <input type="email" class="form-control" id="testEmail" placeholder="输入测试邮箱">
+                    </div>
+                    <button type="button" class="btn btn-outline-primary w-100" onclick="sendTestEmail()">发送测试</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{/block}
+
+{block name="extraJs"}
+<script>
+// 切换邮件驱动
+$('#emtype').on('change', function() {
+    var val = $(this).val();
+    $('.driver-fields').hide();
+    if (val === 'smtp') {
+        $('#fields_smtp').show();
+    } else {
+        $('#fields_aliyun').show();
+    }
+});
+
+// 初始化显示
+$('#emtype').trigger('change');
+
+// 表单提交
+$('#emailForm').on('submit', function(e) {
+    e.preventDefault();
+    var formData = $(this).serialize();
+
+    $.ajax({
+        url: '/admin/emailset/save',
+        type: 'POST',
+        data: formData,
+        dataType: 'json',
+        success: function(res) {
+            if (res && res.code === '200') {
+                alert('保存成功');
+            } else {
+                alert(res ? res.msg : '保存失败');
+            }
+        },
+        error: function() {
+            alert('网络错误');
+        }
+    });
+});
+
+// 发送测试邮件
+function sendTestEmail() {
+    var email = $('#testEmail').val();
+    if (!email) {
+        alert('请输入测试邮箱');
+        return;
+    }
+
+    $.ajax({
+        url: '/admin/emailset/test',
+        type: 'POST',
+        data: {email: email},
+        dataType: 'json',
+        success: function(res) {
+            if (res && res.code === '200') {
+                alert('发送成功');
+            } else {
+                alert(res ? res.msg : '发送失败');
+            }
+        },
+        error: function() {
+            alert('网络错误');
+        }
+    });
+}
+</script>
+{/block}

@@ -1,0 +1,108 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+<!-- Header -->
+<div class="sh-main-head{notempty name="compactHeader"} setup-main-head{/notempty}">
+    <div class="sh-main-head-top{notempty name="compactHeader"} setup-main-top{/notempty}" id="sh-main-head-top">
+        <div class="sh-main-head-top-left">
+            {if condition="!empty($headerBackUrl)"}
+            <div class="sh-main-head-top-left-s" onclick="location.href='{$headerBackUrl}'">
+                <i class="iconfont icon-weibiaoti {notempty name="compactHeader"}al-sxbh{else /}al-sxb{/notempty}" id="top-left-1"></i>
+            </div>
+            {notempty name="headerTitle"}
+            <div class="{notempty name="compactHeader"}sh-main-head-top-left-s setup-main-head-top-left-s{else /}sh-view-head-top-left-s{/notempty}">
+                <span class="{notempty name="compactHeader"}setup-main-title{else /}setup-view-title{/notempty}" id="setup-view-title">{$headerTitle|raw}</span>
+            </div>
+            {/notempty}
+            {elseif condition="!empty($_GET['so'])" /}
+            <div class="sh-main-head-top-left-s" onclick="location.href='/'">
+                <i class="iconfont icon-weibiaoti al-sxb" id="top-left-xx"></i>
+            </div>
+            {/if}
+
+            {php}
+            $loginkgFlag = isFlag($siteConfig['loginkg'] ?? 1, 1);
+            {/php}
+            {if condition="empty($user) && empty($headerBackUrl) && $loginkgFlag === 1"}
+            <div class="sh-main-head-top-left-s" onclick="kqlogin()">
+                <i class="iconfont icon-account-circle-fill ri-sxzytx" id="top-left-1"></i>
+            </div>
+            {/if}
+
+            {if condition="empty($headerBackUrl) && !empty($siteConfig['music'])"}
+            {include file="component/music_player" /}
+            {/if}
+        </div>
+
+        <div class="sh-main-head-top-right">
+            {$headerRightHtml|default=''|raw}
+            {if condition="!empty($user) && empty($headerBackUrl)"}
+            {eq name="siteConfig.ptpfan|isFlag" value="1"}
+            <div class="sh-main-head-top-right-s" onclick="fby()">
+                <i class="iconfont icon-xiangji2 ri-sx" id="top-right-3"></i>
+            </div>
+            {/eq}
+
+            <div class="sh-main-head-top-right-s" onclick="kqnews()">
+                {gt name="unreadMessageCount|default=0" value="0"}
+                <p id="xiaoxhd" class="xiaoxhd"></p>
+                {/gt}
+                <i class="xxtbcl iconfont icon-lingdang ri-sx" id="top-right-1"></i>
+            </div>
+            {/if}
+
+            {php}$lnkztFlag = isFlag($siteConfig['lnkzt'] ?? 0);{/php}
+            {if condition="empty($headerBackUrl) && $lnkztFlag === 0"}
+            <div class="sh-main-head-top-right-s" onclick="kqlink()">
+                <i class="iconfont icon-tongxunlu-copy ri-sx" id="top-right-2"></i>
+            </div>
+            {/if}
+        </div>
+    </div>
+
+    {if condition="empty($compactHeader) && empty($hideCoverHeader)"}
+    {php}
+    $profileUser = $headerUser ?? $user ?? null;
+    if (empty($profileUser)) {
+        $displayName = $siteConfig['name'] ?? '朋友圈';
+        $displayLink = 'javascript:;';
+        $displayAvatar = $siteConfig['glyimg'] ?? $siteConfig['logo'] ?? '';
+        $displaySign = $siteConfig['sign'] ?? '';
+        $homeimg = $siteConfig['homimg'] ?? '';
+    } else {
+        $displayName = $profileUser['name'] ?? $profileUser['username'];
+        $displayLink = empty($headerUser) ? '/home' : 'javascript:;';
+        $displayAvatar = $profileUser['img'] ?? '';
+        $displaySign = $profileUser['sign'] ?? '';
+        $homeimg = $profileUser['homeimg'] ?? $siteConfig['homimg'] ?? '';
+    }
+    if ((string)$homeimg === '-1' || $homeimg === '') {
+        $homeimg = $siteConfig['homimg'] ?? '';
+    }
+    {/php}
+
+    <div class="sh-main-head-img" style="background-image:url({:assetUrl($homeimg)})">
+        {notempty name="headerCoverUpload"}
+        <div class="sh-main-head-top-scba" onclick="reckq()">
+            <i class="iconfont icon-tianjiatupian al-sxb2"></i>
+        </div>
+        {/notempty}
+    </div>
+    {/if}
+</div>
+
+{if condition="empty($compactHeader) && empty($hideProfileHeader)"}
+<div class="sh-main-head-headimg">
+    <div class="sh-main-head-headimg-tx">
+        <h4>{$displayName}</h4>
+        <a href="{$displayLink}"><img src="/assets/img/thumbnail.svg" data-src="{:assetUrl($displayAvatar)}" alt="头像"></a>
+    </div>
+    <div class="sh-main-head-headimg-qm">
+        <p>{$displaySign}</p>
+    </div>
+</div>
+{/if}

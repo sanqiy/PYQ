@@ -1,0 +1,90 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{php}
+$messages = $messages ?? [];
+$messageCount = count($messages);
+{/php}
+{if condition="!empty($user)"}
+<div class="sh-news" id="sh-news" onclick="gbnews()">
+    <div class="sh-news-main" id="sh-news-main" onclick="hfljurl()">
+        <div class="sh-news-main-top">
+            <div class="sh-news-main-top-xiaoxih"><span>消息盒子</span></div>
+            <div class="sh-news-main-top-div" style="display:none;" id="xxscztqbk" onclick="xxscztqb()"><i class="iconfont icon-shanchuwenjian ri-sxhsh ri-sxhs" id="xxscztqb"></i></div>
+            <div class="sh-news-main-top-div sh-news-main-top-div2" onclick="event.stopPropagation();js_menu(event)">
+                <i class="iconfont icon-xialajiantouxiao ri-sxhqx"></i>
+                <div id="js_menu" class="sh-news-main-top-div-menu" style="display: none;">
+                    <a href="javascript:;" onclick="xxscyd()" class="iconfont icon-icon-09 ri-sxhs">全部已读</a>
+                    <a href="javascript:;" onclick="xxsczt()" class="iconfont icon-xuanze ri-sxhs" id="xxsczt" lang="0">选择消息</a>
+                    <a href="javascript:;" onclick="xxscztqb()" class="iconfont icon-shanchu ri-sxhs">删除所有</a>
+                </div>
+            </div>
+            <div class="sh-news-main-top-div" onclick="gbnews()"><i class="iconfont icon-quxiao ri-sxhqx"></i></div>
+        </div>
+        <div class="sh-news-con" id="sh-news-con">
+            {volist name="messages" id="msg"}
+            {php}
+            $msgArticleData = $messageArticles[$msg['id']] ?? ['articleCid' => '#-1', 'article' => null];
+            $articleCid = $msgArticleData['articleCid'];
+            $msgArticle = $msgArticleData['article'];
+            $msgType = $msg['type'] ?? 0;
+            $coverHtml = '<img src="/assets/img/thumbnailbg.svg" data-src="/assets/img/thumbnailbg.svg" alt="cover">';
+            if ($msgArticle) {
+                if (($msgArticle['ptplx'] ?? '') === 'img' && !empty($msgArticle['ptpimag'])) {
+                    $firstImage = thumbUrl(assetUrl(explode('(+@+)', $msgArticle['ptpimag'])[0]));
+                    $coverHtml = '<img src="/assets/img/thumbnailbg.svg" data-src="' . $firstImage . '" alt="cover">';
+                } elseif (($msgArticle['ptplx'] ?? '') === 'only') {
+                    $coverHtml = '<div class="sh-xxliebwb"><span>' . sanitizeHtml($msgArticle['ptptext'] ?? '') . '</span></div>';
+                }
+            }
+            $unreadStyle = isFlag($msg['msg'] ?? 0) === 0 ? '' : 'style="display:none"';
+            // 系统/邮件/审核通知使用系统图标代替用户头像
+            $isSystemType = in_array($msgType, [2, 3, 4]);
+            if ($isSystemType) {
+                $sysIcon = $msgType === 3 ? '&#128227;' : ($msgType === 4 ? '&#9993;' : '&#9989;');
+                $sysBg = $msgType === 3 ? '#4a90d9' : ($msgType === 4 ? '#f5a623' : (strpos($msg['text'] ?? '', '未通过') !== false ? '#e74c3c' : '#27ae60'));
+                $avatarHtml = '<div class="sh-news-sys-icon" style="width:40px;height:40px;border-radius:50%;background:'.$sysBg.';display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;">'.$sysIcon.'</div>';
+            } else {
+                $avatarHtml = '<img src="/assets/img/thumbnail.svg" data-src="' . resolveVisitorAvatar($msg['fimg']) . '" data-fallback="/assets/img/tx.png" alt="avatar" class="sh-news-con-lie-left-img">';
+            }
+            $onclickFn = $isSystemType ? 'mesgxqSys(this)' : 'mesgxq()';
+            {/php}
+            <div id="{$msg.id}" class="sh-news-con-lie" lang="{$articleCid}" data-systype="{$msgType}" onclick="{$onclickFn}">
+                <div class="sh-news-con-lie-left">
+                    <p id="xxztx-{$msg.id}" {$unreadStyle|raw}></p>
+                    <div class="sh-news-con-lie-left-imgt">
+                        {$avatarHtml|raw}
+                    </div>
+                </div>
+                <div class="sh-news-con-lie-right">
+                    <p id="xxtzidtitle-{$msg.id}" class="sh-news-con-lie-right-title">{$msg.fname}<span class="sh-news-con-lie-right-time">{:formatFriendlyDate(strtotime($msg['ftime']))}</span></p>
+                    <p id="xxtzidtext-{$msg.id}" class="sh-news-con-lie-right-text" lang="{$msg.title}">{:empty($msg['text']) ? $msg['title'] : $msg['text']}</p>
+                </div>
+                <div class="sh-xxliebfm">{$coverHtml|raw}<div class="delmes" id="{$msg.id}" onclick="demes()">删除</div></div>
+            </div>
+            {/volist}
+        </div>
+        <div class="sh-news-tishi">
+            <p>共<span id="xxtzsul">{$messageCount}</span>条消息</p>
+        </div>
+    </div>
+</div>
+<script>
+function mesgxqSys(el) {
+    if (window.event && window.event.stopPropagation) window.event.stopPropagation();
+    var msgId = el.id;
+    var xxzt = Sanqi.id("xxsczt");
+    var selectMode = xxzt ? xxzt.lang : "0";
+    if (selectMode == 0) {
+        Sanqi.apiPost('/api/message/operate', { plid: msgId, type: 0 }, function(res){
+            var unreadDot = Sanqi.id("xxztx-" + msgId);
+            if (unreadDot) unreadDot.style.display = "none";
+        });
+    }
+}
+</script>
+{/if}

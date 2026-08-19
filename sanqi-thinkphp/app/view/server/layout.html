@@ -1,0 +1,94 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{:session('allkey') ?? ''}">
+    <title>{$pageTitle|default='服务端管理'}</title>
+    <link rel="stylesheet" type="text/css" href="{:staticUrl('/assets/css/style.css')}">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <style>
+        body{margin:0;background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif}
+        .sv-wrap{max-width:1200px;margin:0 auto;padding:20px}
+        .sv-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding:16px 20px;background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+        .sv-header h4{margin:0;color:#333;display:flex;align-items:center;gap:8px}
+        .sv-header .sv-nav a{color:#666;text-decoration:none;font-size:14px;margin-left:16px}
+        .sv-header .sv-nav a:hover{color:#333}
+        .sv-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+        .sv-stat-box{padding:20px;border-radius:10px;color:#fff}
+        .sv-stat-box h6{font-size:13px;opacity:.85;margin-bottom:6px}
+        .sv-stat-box h3{margin:0;font-size:1.8rem;font-weight:700}
+        .card{background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:20px}
+        .card-header{padding:14px 20px;border-bottom:1px solid #f0f0f0;font-weight:600;display:flex;justify-content:space-between;align-items:center}
+        .card-body{padding:0}
+        .card-body-pad{padding:20px}
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:10px 16px;text-align:left;border-bottom:1px solid #f5f5f5;font-size:14px}
+        th{background:#fafafa;font-weight:600;white-space:nowrap}
+        .badge{display:inline-block;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:500}
+        .badge-success{background:#e8f5e9;color:#2e7d32}
+        .badge-secondary{background:#eee;color:#666}
+        .badge-info{background:#e3f2fd;color:#1565c0}
+        .btn{display:inline-block;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;border:none;text-decoration:none}
+        .btn-primary{background:#4a90d9;color:#fff}
+        .btn-sm{padding:4px 10px;font-size:12px}
+        .btn-outline-primary{background:transparent;border:1px solid #4a90d9;color:#4a90d9}
+        .btn-outline-warning{background:transparent;border:1px solid #e67e22;color:#e67e22}
+        .btn-outline-danger{background:transparent;border:1px solid #e74c3c;color:#e74c3c}
+        .btn-outline-secondary{background:transparent;border:1px solid #999;color:#999}
+        .btn:hover{opacity:.85}
+        .form-control{width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:14px;box-sizing:border-box}
+        .form-control:focus{outline:none;border-color:#4a90d9}
+        textarea.form-control{resize:vertical}
+        .d-flex{display:flex}.gap-2{gap:8px}
+        .mb-2{margin-bottom:8px}.mb-3{margin-bottom:12px}.mb-4{margin-bottom:16px}
+        .text-muted{color:#999}.text-end{text-align:right}.text-center{text-align:center}
+        .alert{padding:10px 14px;border-radius:6px;margin-bottom:12px;font-size:13px}
+        .alert-success{background:#e8f5e9;color:#2e7d32}
+        .alert-danger{background:#fce4ec;color:#c62828}
+        .alert-warning{background:#fff3e0;color:#e65100}
+        .alert-info{background:#e3f2fd;color:#1565c0}
+        .d-none{display:none}
+        .sv-row{display:flex;gap:20px}
+        .sv-col-5{flex:0 0 42%}.sv-col-7{flex:0 0 56%}
+        @media(max-width:768px){.sv-row{flex-direction:column}.sv-stat{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+    <div class="sv-wrap">
+        <div class="sv-header">
+            <h4><i class="bi bi-hdd-network"></i> 服务端管理</h4>
+            <div class="sv-nav">
+                <a href="/server/admin/"><i class="bi bi-grid"></i> 管理中心</a>
+                <a href="/admin/"><i class="bi bi-arrow-left"></i> 返回后台</a>
+                <a href="/server/admin/logout"><i class="bi bi-box-arrow-right"></i> 退出</a>
+            </div>
+        </div>
+        {block name="content"}{/block}
+    </div>
+    <script>
+    var myallkeyVar = document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : '';
+    function ajaxRequest(url, data, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url);
+        xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.onload = function() {
+            try { var res = JSON.parse(xhr.responseText); } catch(e) { var res = {code:500,msg:'服务器错误'}; }
+            callback(res);
+        };
+        xhr.onerror = function() { callback({code:500,msg:'网络错误'}); };
+        var params = [];
+        for (var k in data) { params.push(encodeURIComponent(k) + '=' + encodeURIComponent(data[k])); }
+        xhr.send(params.join('&'));
+    }
+    </script>
+</body>
+</html>

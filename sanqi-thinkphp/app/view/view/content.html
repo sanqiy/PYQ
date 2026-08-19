@@ -1,0 +1,503 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{php}
+/**
+ * Article detail content.
+ */
+$cid = $article['cid'];
+$ptpuser = $article['ptpuser'];
+$ptpimg = getUserAvatar($ptpuser);
+$isAnonymousPost = isFlag($article['is_anonymous'] ?? 0) === 1;
+$displayName = $isAnonymousPost ? '匿名用户' : getUserDisplayName($ptpuser);
+if ($isAnonymousPost) {
+    $ptpimg = '/assets/img/tx.png';
+}
+$ptptext = renderArticleEmojis(cleanArticleHtml($article['ptptext'] ?? ''));
+$ptpimag = $article['ptpimag'] ?? '';
+$ptpvideo = $article['ptpvideo'] ?? '';
+$ptpmusic = $article['ptpmusic'] ?? '';
+$ptplx = $article['ptplx'] ?? 'only';
+$ptpdw = $article['ptpdw'] ?? '';
+$ptptime = $article['ptptime'] ?? '';
+$ptpgg = $article['ptpgg'] ?? 0;
+$ptpggurl = $article['ptpggurl'] ?? '';
+$ptpys = isFlag($article['ptpys'] ?? 1, 1);
+$commauth = isFlag($article['commauth'] ?? 1, 1);
+$tagsEnabled = \app\service\ContentFeatureService::tagsEnabled();
+$tagList = $tagsEnabled ? array_values(array_filter(array_map('trim', explode(',', $article['tags'] ?? '')))) : [];
+$musicSource = '';
+
+$videoParts = explode('|', $ptpvideo);
+$videoUrl = assetUrl($videoParts[0] ?? '');
+$videoCover = assetUrl($videoParts[1] ?? '');
+$images = $ptpimag === '' ? [] : array_values(array_filter(explode('(+@+)', $ptpimag), function ($value) {
+    return trim((string)$value) !== '';
+}));
+$imgCount = count($images);
+
+if ($imgCount === 1) {
+    $gridStyle = 'grid-template-columns:1fr;width: 55%;';
+} elseif ($imgCount === 2 || $imgCount === 4) {
+    $gridStyle = 'grid-template-columns:1fr 1fr;width: 55%;';
+} else {
+    $gridStyle = 'grid-template-columns:1fr 1fr 1fr;';
+}
+
+$adStyle = (isFlag($ptpgg ?? 0) === 1) ? 'display: flex;' : 'display: none;';
+$adUrl = (isFlag($ptpgg ?? 0) === 1 && $ptpggurl !== '')
+    ? '<div class="sh-content-right-ggurl"><i class="iconfont icon-lianjie1 ri-sxwzgg"></i><a href="' . sanitizeUrl($ptpggurl) . '" target="_blank">进一步了解</a></div>'
+    : '';
+$gps = (isFlag($ptpgg ?? 0) === 1) ? '' : '<div class="sh-content-right-gps"><a href="javascript:;">' . sanitizeHtml($ptpdw) . '</a></div>';
+
+$contentText = preg_replace('/<img[^>]+>/i', '', $ptptext);
+$contentText = preg_replace('/<span[^>]+>/i', '', $contentText);
+$contentText = preg_replace('/<a href=[^>]+>/i', '', $contentText);
+$contentText = str_replace(' ', '', $contentText);
+$displayText = iconv_strlen($contentText, 'UTF-8') > 100
+    ? '<span class="wzndhycyc" id="sh-content-qwdid-' . $cid . '">' . $ptptext . '</span><a href="javascript:;" class="sh-content-quanwenan" id="sh-content-quanwenan-' . $cid . '" lang="0" onclick="quanwenan()">全文</a>'
+    : '<span>' . $ptptext . '</span>';
+
+$dianzanText = '赞';
+$dianzanClass = 'iconfont icon-aixin ri-sxdzlike';
+if (!empty($liked)) {
+    $dianzanText = '取消';
+    $dianzanClass = 'iconfont icon-aixin2 ri-sxdzlikehs';
+}
+
+$commentBtn = ($commauth === 1)
+    ? '<div class="sh-content-right-time-right-left-y" id="' . $cid . '" onclick="plkkg()"><i class="iconfont icon-pinglun2 ri-sxdzcomm"></i><span>评论</span></div>'
+    : '<div class="sh-content-right-time-right-left-y" id="' . $cid . '"><i class="iconfont icon-pinglun2 ri-sxdzcomm"></i><span>评论关闭</span></div>';
+
+$isOwner = $user && ($ptpuser === $user['username']);
+$isAdminUser = $user && isAdmin($user['username']);
+$canManage = $isOwner || $isAdminUser;
+$deleteIcon = $canManage ? '<i class="iconfont icon-shanchu" id="sh-delewza-' . $cid . '" title="点击删除此内容" onclick="delewenz(this)"></i>' : '';
+$topIds = !empty($siteConfig['topes']) ? array_filter(array_map('trim', explode("\n", $siteConfig['topes']))) : [];
+$isAdminPinned = in_array((string)$cid, $topIds, true);
+$isUserPinned = !empty($article['user_top']);
+$isPinned = $isAdminPinned || $isUserPinned;
+$pinStyle = 'background: var(--themetm);' . (isFlag($ptpgg ?? 0) === 1 ? 'margin-right: 5px;' : '');
+{/php}
+
+<div class="sh-nrbk" id="sh-nrbk" style="width:100%">
+    <div class="sh-content sh-content2" id="sh-content-{$cid}">
+        <div class="sh-content-left">
+            <img src="/assets/img/thumbnail.svg" data-src="{$ptpimg}" data-fallback="/assets/img/tx.png" alt="avatar">
+        </div>
+        <div class="sh-content-right">
+            <div class="sh-content-right-head">
+                <div class="sh-content-right-head-title">
+                    <p>{$displayName}</p>
+                    {php}$ptpggFlag = isFlag($ptpgg ?? 0);{/php}
+                    {if condition="$isPinned || $ptpggFlag === 1"}
+                    <div style="display: flex;align-content: center;">
+                        {if condition="$isPinned"}
+                        <div class="sh-content-right-head-title-ad" style="{$pinStyle}">
+                            <p style="color: var(--theme);">置顶</p>
+                        </div>
+                        {/if}
+                    <div class="sh-content-right-head-title-ad" style="{$adStyle}">
+                        <p>广告</p>
+                    </div>
+                    </div>
+                    {/if}
+                </div>
+                {$displayText|raw}
+                {notempty name="tagList"}
+                <div class="sh-content-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;">
+                    {volist name="tagList" id="tag"}
+                    <a href="/?tag={:rawurlencode($tag)}" style="font-size:12px;color:var(--theme);">#{$tag}</a>
+                    {/volist}
+                </div>
+                {/notempty}
+
+                {if condition="$ptplx === 'img'"}
+                <div class="sh-content-right-img" id="imglib-{$cid}" style="{$gridStyle}">
+                    {php}
+                    foreach ($images as $index => $image) {
+                        $imageUrl = assetUrl($image);
+                        $picStyle = $imgCount > 1 ? 'style="width: 100%;"' : '';
+                        if ($index > 7 && $imgCount > 9) {
+                            if ($index === 8) {
+                                echo '<a href="' . $imageUrl . '" class="sh-content-right-img-pic" data-fancybox="gallery' . $cid . '" data-caption="">
+                                    <span class="sh-content-right-img-pic-mask">+' . ($imgCount - $index - 1) . '</span>
+                                    <img src="/assets/img/thumbnail.svg" data-src="' . $imageUrl . '" alt="" ' . $picStyle . '>
+                                </a>';
+                            } else {
+                                echo '<a href="' . $imageUrl . '" class="sh-content-right-img-pic" data-fancybox="gallery' . $cid . '" data-caption="" style="display:none;">
+                                    <img src="' . $imageUrl . '" data-src="' . $imageUrl . '" alt="" ' . $picStyle . '>
+                                </a>';
+                            }
+                        } else {
+                            echo '<a href="' . $imageUrl . '" class="sh-content-right-img-pic" data-fancybox="gallery' . $cid . '" data-caption="">
+                                <img src="/assets/img/thumbnail.svg" data-src="' . $imageUrl . '" alt="" ' . $picStyle . '>
+                            </a>';
+                        }
+                    }
+                    {/php}
+                </div>
+                {elseif condition="$ptplx === 'video'" /}
+                {php}
+                $videoAutoplay = isFlag($siteConfig['videoauplay'] ?? 0) === 1 ? 'autoplay' : '';
+                $videoPlayIcon = isFlag($siteConfig['videoauplay'] ?? 0) === 0 ? '<i class="iconfont icon-sa4f56" id="sh-content-video-videobfb-' . $cid . '" style="width: fit-content;height: fit-content;grid-column: 1;grid-row: 1;z-index: 5;position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);font-size: 40px;color: #ffffff;display: flex;cursor: pointer;padding: 15px;pointer-events: none;"></i>' : '';
+                $isBilibili = stripos($videoUrl, 'player.bilibili.com') !== false;
+                {/php}
+                {if condition="$isBilibili"}
+                <div class="sh-video" id="sh-content-video-{$cid}" onclick="videofdgb()" lang="0">
+                    <iframe src="{$videoUrl}&autoplay=0" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>
+                    <i class="iconfont icon-quxiao" id="sh-content-videog-{$cid}" lang="0"></i>
+                    <span class="sh-video-span" id="sh-video-span-{$cid}">BiliBili</span>
+                </div>
+                {else/}
+                <div class="sh-video" id="sh-content-video-{$cid}" onclick="videofdgb()" lang="0">
+                    <video name="sh-videokid" class="sh-content-video" poster="{$videoCover}" id="sh-content-videok-{$cid}" src="{$videoUrl}" playsinline webkit-playsinline preload="metadata" {$videoAutoplay|raw} muted loop onclick="videofd()" lang="0" disablePictureInPicture="true" controlslist="nodownload nofullscreen noremoteplayback"></video>
+                    {$videoPlayIcon|raw}
+                    <i class="iconfont icon-quxiao" id="sh-content-videog-{$cid}" lang="0"></i>
+                    <span class="sh-video-span" id="sh-video-span-{$cid}">MP4</span>
+                </div>
+                {/if}
+                {elseif condition="$ptplx === 'music' && !is_numeric($ptpmusic)" /}
+                {php}
+                $mus = explode('|', $ptpmusic);
+                echo \think\facade\View::fetch('component/music_play', ['mus' => $mus, 'cid' => $cid]);
+                $mu = $mus[0] ?? '';
+                $musicSource = '';
+                if (stripos($mu, 'qq-proxy') !== false || stripos($mu, 'qq.com') !== false) {
+                    $musicSource = 'QQ音乐';
+                } elseif (stripos($mu, 'kugou') !== false) {
+                    $musicSource = '酷狗音乐';
+                } elseif (stripos($mu, 'kuwo') !== false) {
+                    $musicSource = '酷我音乐';
+                } elseif (stripos($mu, '163.com') !== false || stripos($mu, '/api/music/proxy') !== false) {
+                    $musicSource = '网易云音乐';
+                }
+                {/php}
+                {/if}
+            </div>
+
+            {if condition="$ptpdw !== ''"}
+            {$gps|raw}
+            {/if}
+            {$adUrl|raw}
+
+            {notempty name="attachments"}
+            <div class="sh-attach-view">
+                <div class="sh-attach-view-title"><i class="iconfont icon-biaoqian"></i> 附件 ({:count($attachments)})</div>
+                {php}
+                $attachUser = $user ?? null;
+                foreach ($attachments as $att) {
+                    $attId = (int)$att['id'];
+                    $attName = sanitizeHtml($att['file_name'] ?: basename($att['file_url']));
+                    $attDesc = sanitizeHtml($att['file_desc'] ?? '');
+                    $attSize = '';
+                    if ($att['file_size'] > 0) {
+                        if ($att['file_size'] > 1048576) $attSize = number_format($att['file_size'] / 1048576, 1) . 'MB';
+                        elseif ($att['file_size'] > 1024) $attSize = number_format($att['file_size'] / 1024, 0) . 'KB';
+                        else $attSize = $att['file_size'] . 'B';
+                    }
+                    $attCode = $att['extract_code'] ?? '';
+                    $attType = $att['type'] ?? 'file';
+                    $attUrl = $att['file_url'];
+                    $iconClass = $attType === 'link' ? 'icon-lianjie1' : 'icon-biaoqian';
+                    $sizeHtml = $attSize ? ' <span class="att-size">(' . $attSize . ')</span>' : '';
+                    $codeHtml = $attCode !== '' ? ' <span class="att-code-tag">提取码: ' . sanitizeHtml($attCode) . '</span>' : '';
+                    $descHtml = $attDesc !== '' ? '<div class="sh-attach-view-desc">' . $attDesc . '</div>' : '';
+
+                    if ($attachUser) {
+                        if ($attType === 'link') {
+                            echo '<div class="sh-attach-view-item"><i class="iconfont ' . $iconClass . '"></i><div class="sh-attach-view-info"><a href="' . sanitizeUrl($attUrl) . '" target="_blank">' . $attName . '</a>' . $descHtml . '</div>' . $sizeHtml . $codeHtml . '</div>';
+                        } else {
+                            echo '<div class="sh-attach-view-item"><i class="iconfont ' . $iconClass . '"></i><div class="sh-attach-view-info"><a href="/api/attachment/download?id=' . $attId . '">' . $attName . '</a>' . $descHtml . '</div>' . $sizeHtml . $codeHtml . '</div>';
+                        }
+                    } else {
+                        echo '<div class="sh-attach-view-item"><i class="iconfont ' . $iconClass . '"></i><div class="sh-attach-view-info"><span>' . $attName . '</span>' . $descHtml . '</div>' . $sizeHtml . '<span class="att-login">登录后可下载</span></div>';
+                    }
+                }
+                {/php}
+            </div>
+            {/notempty}
+
+            {notempty name="poll"}
+            <div class="sh-poll-view" id="sh-poll-{$poll.id}">
+                <div class="sh-poll-view-title"><i class="iconfont icon-pinglun-yx"></i> 投票</div>
+                <div class="sh-poll-view-question">{$poll.question}</div>
+                <div class="sh-poll-view-options" id="sh-poll-options-{$poll.id}" data-voted="{if condition="$poll['has_voted'] || $poll['expired']"}1{else /}0{/if}">
+                    {volist name="poll.options" id="opt"}
+                    <div class="sh-poll-view-option {if condition="$opt['selected']"}sh-poll-view-option-selected{/if}" data-index="{$opt.index}" onclick="pollVote({$poll.id}, {$opt.index}, {$poll.type})">
+                        <div class="sh-poll-view-option-bar" style="width: {if condition="$poll['has_voted']"}{$opt.percent}{else /}0{/if}%"></div>
+                        <div class="sh-poll-view-option-text">
+                            <span class="sh-poll-view-option-label">{$opt.text}</span>
+                            {if condition="$poll['has_voted']"}
+                            <span class="sh-poll-view-option-stat">{$opt.count}票 ({$opt.percent}%)</span>
+                            {/if}
+                        </div>
+                        {if condition="$opt['selected']"}<span class="sh-poll-view-option-check">✓</span>{/if}
+                    </div>
+                    {/volist}
+                </div>
+                <div class="sh-poll-view-footer">
+                    <span>共 {$poll.total_votes} 人参与</span>
+                    {if condition="$poll['expired']"}<span class="sh-poll-view-expired">已结束</span>{/if}
+                    {if condition="$poll['type'] == 2"}<span class="sh-poll-view-type">多选</span>{/if}
+                </div>
+            </div>
+            {/notempty}
+
+            <div class="sh-content-right-time">
+                <div class="sh-content-right-time-left"><span>{:formatFriendlyDate(strtotime($ptptime))}</span>{if condition="$musicSource"}<span class="sh-music-source">来自 {$musicSource}</span>{/if}{$deleteIcon|raw}</div>
+                <div class="sh-content-right-time-right">
+                    <div class="sh-content-right-time-right-left" id="pl-{$cid}" name="pl">
+                        <div class="sh-content-right-time-right-left-z" data-cid="{$cid}" onclick="dinazanv()">
+                            <i class="{$dianzanClass}" id="tiezimg-{$cid}"></i>
+                            <span id="tiezdz-{$cid}">{$dianzanText|raw}</span>
+                        </div>
+                        <p></p>
+                        {$commentBtn|raw}
+                    </div>
+                    <div class="sh-content-right-time-right-right" id="{$cid}" onclick="plk()">
+                        <p class="zp1"></p>
+                        <p></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sh-zanp" id="zanss-{$cid}">
+                <div class="sh-zanp-zan zan2" id="zans-{$cid}" style="{empty name="likes"}display:none{else /}display:flex{/empty}">
+                    <div class="sh-zanp-zan-left sh-zanp-zan-left2"><i class="iconfont icon-aixin ri-sxwzlike"></i></div>
+                    <ul class="sh-zanp-zan-right sh-zanp-zan-right2" id="sh-zanp-ul">
+                        {php}
+                        $visitorCount = 0;
+                        foreach ($likes as $like) {
+                            $luser = (string)($like['luser'] ?? '');
+                            if (isVisitorUser($luser) && trim((string)($like['lname'] ?? '')) === '') {
+                                $visitorCount++;
+                            } else {
+                                $avatar = getLikeAvatar($like, $likeUsers);
+                                $likeName = getLikeDisplayName($like);
+                                echo '<li id="zan-' . sanitizeHtml($luser) . '" title="' . sanitizeHtml($likeName) . '"><img src="/assets/img/thumbnail.svg" data-src="' . sanitizeHtml($avatar) . '" data-fallback="/assets/img/tx.png" alt="' . sanitizeHtml($likeName) . '"></li>';
+                            }
+                        }
+                        if ($visitorCount > 0) {
+                            echo '<li id="fkzan-zan" style="width: fit-content;height: 30px;margin-right: 5px;margin-bottom: 5px;display: flex;align-items: center;"><span style="font-size: 12px;color: var(--adgg);max-width: 100px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">' . $visitorCount . '位访客</span></li>';
+                        }
+                        {/php}
+                    </ul>
+                </div>
+
+                <div class="sh-dz-z" id="sh-dz-z-{$cid}" style="{empty name="comments"}display:none;{/empty}">
+                    <div class="sh-zanp-zan-left sh-zanp-zan-left2"><i class="iconfont icon-pinglun2 ri-sxdzcommls"></i></div>
+                    <ul class="sh-zanp-pl sh-zanp-pl2 sh-zanp-pl3" id="sh-zanp-pl-{$cid}" style="{empty name="comments"}display:none;{/empty}">
+                        {volist name="comments" id="comment"}
+                        {php}
+                        $commentText = (isFlag($comment['comaud'] ?? 1, 1) === 1) ? $comment['cotext'] : '该条评论未通过审核!';
+                        $commentTime = formatFriendlyDate(strtotime($comment['cotime']));
+                        $commentAvatar = getCommentAvatar($comment);
+                        $commentName = getUserDisplayName((string)($comment['couser'] ?? ''), (string)($comment['coname'] ?? ''));
+                        $replyName = getUserDisplayName((string)($comment['bcouser'] ?? ''), (string)($comment['bconame'] ?? ''));
+                        $commentUrl = empty($comment['courl']) ? '' : 'href="' . sanitizeUrl($comment['courl']) . '" style="pointer-events: all;"';
+                        {/php}
+                        <li class="sh-comment-item" data-comment-item="1" data-comment-name="{$commentName}" data-comment-user="{$comment.couser}" data-comment-article="{$cid}" data-comkzt="0">
+                            <div class="sh-zanp-pl-tx"><img src="/assets/img/thumbnail.svg" data-src="{$commentAvatar}" data-fallback="/assets/img/tx.png" alt="avatar"></div>
+                            <div class="sh-zanp-pl-n sh-zanp-pl-n2">
+                                <div class="sh-zanp-pl-n-mz"><a {$commentUrl|raw} class="sh-zanp-pl-n-nc" target="_blank">{$commentName}</a> <span>&#183; {$commentTime}</span></div>
+                                {if condition="(!empty($comment['bcouser']) && $comment['bcouser'] !== 'false') || (!empty($comment['bconame']) && $comment['bconame'] !== 'false')"}
+                                <span>回复</span>
+                                <span class="sh-zanp-pl-n-nc">{$replyName}</span>：
+                                {/if}
+                                <span class="sh-zanp-pl-n-nr">{php}echo isFlag($comment['comaud'] ?? 1, 1) === 1 ? renderArticleEmojis(sanitizeHtml($comment['cotext'])) : $commentText;{/php}</span>
+                            </div>
+                        </li>
+                        {/volist}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{eq name="commauth" value="1"}
+<div style="display:none;position: absolute;top: -100%;" id="pinglunkfk">
+<div class="sh-pinglunkuang" id="pinglunkuang">
+    <div class="sh-pinglun" id="sh-pinglun">
+        {empty name="user"}
+        <div class="sh-plk-yk" id="sh-plk-yk">
+            <div class="sh-plk-yk-z"><input id="vis_name" type="text" placeholder="昵称*" autocomplete="off"></div>
+            <div class="sh-plk-yk-zz"><input id="vis_email" type="text" placeholder="邮箱*" autocomplete="off"></div>
+            <div class="sh-plk-yk-z"><input id="vis_url" type="text" placeholder="网站" autocomplete="off"></div>
+        </div>
+        {/empty}
+        <div class="sh-pinglun-s">
+            <textarea id="bletext" class="form-controll" placeholder="评论" maxlength="500"></textarea>
+        </div>
+        <div class="sh-pinglun-biao" id="biaoqing">
+            {include file="component/emoji_picker" /}
+        </div>
+        <div class="sh-pinglun-fs">
+            <div class="sh-pinglun-fs-right">
+                <div class="sh-pinglun-fs-right-bqimg" id="bqkg" onclick="bqkg()">
+                    <i class="iconfont icon-biaoqing ri-sxbqxz" id="sh-pinglun-fs-right-bqimg"></i>
+                </div>
+                <div class="sh-pinglun-fs-right-fs" onclick="fasongv()">
+                    <span>发送</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="huifucanshu">
+        <p id="sh-tieid">{$cid}</p>
+        <p id="sh-tiehf">-</p>
+        <p id="sh-tieea">-</p>
+    </div>
+</div>
+</div>
+{else/}
+<div class="huifucanshu" style="display:none;">
+    <p id="sh-tieid">{$cid}</p>
+    <p id="sh-tiehf">-</p>
+    <p id="sh-tieea">-</p>
+</div>
+{/eq}
+
+<div class="sh-view-set" id="sh-view-set">
+    <div class="sh-view-set-wk" id="sh-view-set-wk" onclick="viewsetg()">
+        <div class="sh-view-set-wk-con" id="sh-view-set-wk-con">
+            <div class="sh-view-set-wk-con-title" style="margin-bottom: 1px;" data-cid="{$cid}" onclick="openSharePanel(this)">
+                <span>分享</span>
+            </div>
+            {if condition="$authorQr['alipay_qr'] || $authorQr['wechat_qr']"}
+            <div class="sh-view-set-wk-con-title" style="margin-bottom: 1px;" onclick="openTipPanel()">
+                <span>打赏</span>
+            </div>
+            {/if}
+            {notempty name="canManage"}
+            <div class="sh-view-set-wk-con-divider"></div>
+            {notempty name="isAdminUser"}
+            <div class="sh-view-set-wk-con-title" style="margin-bottom: 1px;" id="sh-wzzdyqx-{$cid}" lang="{$isAdminPinned ? 'qx' : 'sw'}" onclick="wzszd(this)">
+                <span>{$isAdminPinned ? '取消首页置顶' : '首页置顶'}</span>
+            </div>
+            {/notempty}
+            {if condition="$isOwner"}
+            <div class="sh-view-set-wk-con-title" style="margin-bottom: 1px;" id="sh-wzyhd-{$cid}" lang="{$isUserPinned ? 'qx' : 'sw'}" onclick="wzszd_user(this)">
+                <span>{$isUserPinned ? '取消个人置顶' : '个人置顶'}</span>
+            </div>
+            {/if}
+            <div class="sh-view-set-wk-con-title" style="margin-bottom: 1px;" onclick="location.href='/edit/{$cid}'">
+                <span>编辑</span>
+            </div>
+            <div class="sh-view-set-wk-con-title" id="sh-wzdsdzt-{$cid}" lang="{$ptpys === 1 ? '0' : '1'}" onclick="wzsdyj(this)">
+                <span>{$ptpys === 1 ? '设为隐私' : '取消隐私'}</span>
+            </div>
+            {/notempty}
+            <div class="sh-view-set-wk-con-title" style="margin-top: 5px;padding-bottom: 10px;" onclick="viewsetg()">
+                <span>取消</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<input type="hidden" id="allkey" value="{$allkey}">
+
+<!-- 分享面板 -->
+<div class="share-panel" id="sharePanel" style="display:none;">
+    <div class="share-panel-box">
+        <div class="share-panel-head">
+            <span>分享到</span>
+            <i class="iconfont icon-quxiao" onclick="closeSharePanel()"></i>
+        </div>
+        <div class="share-panel-body">
+            <div class="share-item" onclick="shareToWechat()">
+                <div class="share-icon share-wechat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.3 17.2c-3.4-.4-6-2.7-6-5.6 0-3.2 3.3-5.8 7.3-5.8 3.7 0 6.8 2.2 7.2 5.1"></path><path d="M14.8 11.2c3.4 0 6.1 2 6.1 4.5s-2.7 4.5-6.1 4.5c-.7 0-1.4-.1-2-.3l-2.2 1.1.5-2c-1.5-.8-2.4-2-2.4-3.3 0-2.5 2.7-4.5 6.1-4.5Z"></path><path d="M8.4 10h.01M12.4 10h.01M13.6 15.4h.01M17 15.4h.01"></path></svg></div>
+                <span>微信</span>
+            </div>
+            <div class="share-item" onclick="shareToWeibo()">
+                <div class="share-icon share-weibo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.4 9.1c1.2 1 1.9 2.3 1.9 3.8 0 3.3-4 6-8.9 6s-8.9-2.7-8.9-6c0-2.5 2.3-4.6 5.5-5.5.7-1.2 1.9-2.9 3.8-2.4 1 .3 1.4 1.2 1.4 2.1 1.7-.5 3.6-.4 5.2 2Z"></path><path d="M10 13.6c0 1.1 1.2 2 2.7 2s2.7-.9 2.7-2-1.2-2-2.7-2-2.7.9-2.7 2Z"></path><path d="M17 4.8c1.5 0 2.7 1.1 2.9 2.6M18.5 2.7c2.2.2 4 1.9 4.2 4.1"></path></svg></div>
+                <span>微博</span>
+            </div>
+            <div class="share-item" onclick="shareToQQ()">
+                <div class="share-icon share-qq"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 10.7c0-3.8 1.8-6.7 4-6.7s4 2.9 4 6.7c0 1.5-.3 2.8-.8 3.9l2.1 2.5-2.8-.2c-.7.6-1.6.9-2.5.9s-1.8-.3-2.5-.9l-2.8.2 2.1-2.5c-.5-1.1-.8-2.4-.8-3.9Z"></path><path d="M9.1 18.2 7.8 21M14.9 18.2l1.3 2.8M10.8 9.8h.01M13.2 9.8h.01"></path></svg></div>
+                <span>QQ</span>
+            </div>
+            <div class="share-item" onclick="copyShareLink()">
+                <div class="share-icon share-link"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 13.5a4 4 0 0 0 5.7 0l2.8-2.8a4 4 0 0 0-5.7-5.7l-1.2 1.2"></path><path d="M14 10.5a4 4 0 0 0-5.7 0l-2.8 2.8a4 4 0 0 0 5.7 5.7l1.2-1.2"></path></svg></div>
+                <span>复制链接</span>
+            </div>
+            <div class="share-item" onclick="generatePoster()">
+                <div class="share-icon share-poster"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"></rect><path d="M8 8h8M8 11h8M8 16l2-2 2 2 2.5-3 1.5 2"></path></svg></div>
+                <span>生成海报</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 海报预览 -->
+<div class="poster-modal" id="posterModal" style="display:none;">
+    <div class="poster-modal-box">
+        <div class="poster-modal-head">
+            <span>分享海报</span>
+            <i class="iconfont icon-quxiao" onclick="closePosterModal()"></i>
+        </div>
+        <div class="poster-modal-body">
+            <canvas id="posterCanvas" width="400" height="560"></canvas>
+        </div>
+        <div class="poster-modal-foot">
+            <div class="poster-btn" onclick="savePoster()">保存图片</div>
+        </div>
+    </div>
+</div>
+
+<!-- 微信二维码弹窗 -->
+<div class="wechat-modal" id="wechatModal" style="display:none;">
+    <div class="wechat-modal-box">
+        <div class="wechat-modal-head">
+            <span>微信扫码分享</span>
+            <i class="iconfont icon-quxiao" onclick="closeWechatModal()"></i>
+        </div>
+        <div class="wechat-modal-body">
+            <div id="qrCanvas" style="width:200px;height:200px;margin:0 auto;"></div>
+            <p>打开微信，扫一扫分享</p>
+        </div>
+    </div>
+</div>
+
+<!-- 打赏弹窗 -->
+{if condition="$authorQr['alipay_qr'] || $authorQr['wechat_qr']"}
+<div class="tip-modal" id="tipModal" style="display:none;">
+    <div class="tip-modal-box">
+        <div class="tip-modal-head">
+            <span>赞赏支持</span>
+            <i class="iconfont icon-quxiao" onclick="closeTipPanel()"></i>
+        </div>
+        <div class="tip-modal-body">
+            {if condition="$authorQr['alipay_qr'] && $authorQr['wechat_qr']"}
+            <div class="tip-modal-tabs">
+                <div class="tip-modal-tab active" onclick="switchTipTab('alipay')">支付宝</div>
+                <div class="tip-modal-tab" onclick="switchTipTab('wechat')">微信</div>
+            </div>
+            {/if}
+            <div class="tip-modal-qr-wrap">
+                {if condition="$authorQr['alipay_qr']"}
+                <div class="tip-modal-qr" id="tipQrAlipay">
+                    <img src="{$authorQr['alipay_qr']}" alt="支付宝收款码">
+                    <p>支付宝扫码打赏</p>
+                </div>
+                {/if}
+                {if condition="$authorQr['wechat_qr']"}
+                <div class="tip-modal-qr" id="tipQrWechat" style="{if condition="$authorQr['alipay_qr']"}display:none{/if}">
+                    <img src="{$authorQr['wechat_qr']}" alt="微信收款码">
+                    <p>微信扫码打赏</p>
+                </div>
+                {/if}
+            </div>
+        </div>
+    </div>
+</div>
+{/if}
+
+<script>
+window.__POSTER_RANDOM_API__ = '{$posterRandomApi|default=""}';
+</script>

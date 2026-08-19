@@ -1,0 +1,130 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{extend name="admin/layout" /}
+
+{block name="content"}
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">文章置顶排序</h5>
+            </div>
+            <div class="card-body">
+                <form id="contentForm">
+                    <div class="mb-3">
+                        <label class="form-label">草稿箱</label>
+                        <select class="form-select" name="drafts_enabled">
+                            <option value="0" {empty name="contentFeatures.drafts_enabled"}selected{/empty}>关闭</option>
+                            <option value="1" {notempty name="contentFeatures.drafts_enabled"}selected{/notempty}>开启</option>
+                        </select>
+                        <div class="form-text">关闭后发布页不显示"保存草稿"，接口也不会再保存为草稿。</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">标签/话题</label>
+                        <select class="form-select" name="tags_enabled">
+                            <option value="0" {empty name="contentFeatures.tags_enabled"}selected{/empty}>关闭</option>
+                            <option value="1" {notempty name="contentFeatures.tags_enabled"}selected{/notempty}>开启</option>
+                        </select>
+                        <div class="form-text">关闭后发布页、首页、详情页不显示标签，也不会按标签筛选。</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">置顶文章 CID</label>
+                        <textarea class="form-control" name="topes" rows="8" placeholder="一行一个 CID，越靠上越优先">{$topes}</textarea>
+                        <div class="form-text">支持多篇置顶。首页会按这里的顺序展示，并自动忽略草稿、未审核、隐藏和未到发布时间的文章。</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">保存内容设置</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">当前置顶</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>CID</th>
+                                <th>内容</th>
+                                <th>状态</th>
+                                <th>发布时间</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {volist name="topArticles" id="article"}
+                            <tr>
+                                <td><code>{$article.cid|default=''}</code></td>
+                                <td>{:strCut(strip_tags($article['ptptext'] ?? ''), 40)}</td>
+                                <td>
+                                    {if condition="isFlag($article['ptpaud'] ?? 0) === -2"}
+                                    <span class="badge bg-secondary">草稿</span>
+                                    {elseif condition="isFlag($article['ptpaud'] ?? 0) === 0"}
+                                    <span class="badge bg-warning">待审核</span>
+                                    {elseif condition="isFlag($article['ptpaud'] ?? 0) === 1"}
+                                    <span class="badge bg-success">已发布</span>
+                                    {elseif condition="isFlag($article['ptpaud'] ?? 0) === -1"}
+                                    <span class="badge bg-danger">已拒绝</span>
+                                    {else}
+                                    <span class="badge bg-light text-dark">未知</span>
+                                    {/if}
+                                </td>
+                                <td>{$article.ptptime|default=''}</td>
+                            </tr>
+                            {/volist}
+                            {empty name="topArticles"}
+                            <tr><td colspan="4" class="text-muted text-center">暂无置顶文章</td></tr>
+                            {/empty}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">评论审核与过滤</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">评论审核</label>
+                    <select class="form-select" name="audit_enabled" form="contentForm">
+                        <option value="0" {empty name="commentSecurity.audit_enabled"}selected{/empty}>关闭，正常评论直接显示</option>
+                        <option value="1" {notempty name="commentSecurity.audit_enabled"}selected{/empty}>开启，普通用户评论进入审核</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">关键词过滤</label>
+                    <textarea class="form-control" name="keywords" form="contentForm" rows="8" placeholder="一行一个关键词">{$commentSecurity.keywords|default=''}</textarea>
+                    <div class="form-text">命中关键词的评论会进入待审核，不直接展示。</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">黑名单</label>
+                    <textarea class="form-control" name="blacklist" form="contentForm" rows="8" placeholder="用户名、昵称、邮箱、网或 IP，一行一个">{$commentSecurity.blacklist|default=''}</textarea>
+                    <div class="form-text">命中黑名单的评论会被直接拦截。</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{/block}
+
+{block name="extraJs"}
+<script>
+document.getElementById('contentForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    ajaxRequest('/admin/content/save', $(this).serialize(), function(res) {
+        alert(res.msg);
+        location.reload();
+    });
+});
+</script>
+{/block}

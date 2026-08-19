@@ -1,0 +1,55 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{extend name="admin/layout" /}
+
+{block name="content"}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">发送系统通知</h5>
+    </div>
+    <div class="card-body">
+        <form id="notifyForm">
+            <div class="mb-3">
+                <label class="form-label">通知标题</label>
+                <input type="text" class="form-control" name="title" maxlength="100" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">通知内容</label>
+                <textarea class="form-control" name="content" rows="4" required></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">发送对象</label>
+                <select class="form-select" name="target" id="notifyTarget">
+                    <option value="all">全体用户</option>
+                    <option value="users">指定用户</option>
+                </select>
+            </div>
+            <div class="mb-3" id="usernamesField" style="display:none;">
+                <label class="form-label">用户名（逗号分隔）</label>
+                <input type="text" class="form-control" name="usernames" placeholder="user1,user2,user3">
+            </div>
+            <button type="submit" class="btn btn-primary">发送</button>
+        </form>
+    </div>
+</div>
+{/block}
+
+{block name="extraJs"}
+<script>
+document.getElementById('notifyTarget').addEventListener('change', function() {
+    document.getElementById('usernamesField').style.display = this.value === 'users' ? 'block' : 'none';
+});
+document.getElementById('notifyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    ajaxRequest('/admin/notification/send', $(this).serialize(), function() {
+        alert('发送成功');
+        location.reload();
+    });
+});
+</script>
+{/block}

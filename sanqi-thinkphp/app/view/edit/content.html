@@ -1,0 +1,784 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+<form id="edit-form" method="post" action="/api/article/save" enctype="multipart/form-data" autocomplete="off">
+    {if condition="!empty($article)"}
+    <input type="text" name="edlx" value="edites" id="editeslx" style="display:none;">
+    <input type="text" name="edwzcid" value="{$editCid}" id="edwzicd" style="display:none;">
+    <input type="radio" name="radio" value="{$editRadio}" checked id="lxmk" style="display:none;">
+    {else/}
+    <input type="text" name="edlx" value="prees" id="editeslx" style="display:none;">
+    {/if}
+    <input type="hidden" name="save_status" id="save_status" value="publish">
+    <input type="hidden" name="draft_key" id="article_draft_key" value="{$editDraftKey}">
+    <input type="hidden" name="poll_change_confirm" id="pollChangeConfirm" value="0">
+
+    <div class="sh-cont-nr">
+        <div class="sh-cont-nr-tzh">
+            <textarea name="text" id="bletext" class="form-controll" placeholder="说点什么.." required maxlength="50000" spellcheck="false">{$editText}</textarea>
+        </div>
+
+        <div class="sh-cont-nr-kg">
+            <div class="sh-cont-nr-kg-bqkg" onclick="shkgbqkg()" title="表情" id="bqkg">
+                <i class="iconfont icon-biaoqing ri-sxfbbq" id="bqkgimg"></i>
+            </div>
+
+            <div class="sh-cont-nr-kg-ggkg" onclick="ggkg()" title="{$editIsAd ? '取消广告' : '设为广告'}" id="ggkg" lang="{$editIsAd ? '1' : '0'}"{if condition="$editIsAd"} style="background: var(--themetm);"{/if}>
+                <i class="iconfont icon-ljgg {$editIsAd ? 'ri-sxfbbqls' : 'ri-sxfbbq'}" id="ggkgimg"></i>
+                <input type="radio" name="radiogg" value="{$editIsAd ? '1' : '0'}" checked id="ggmk" style="display:none;">
+            </div>
+
+            {if condition="$notname || $editIsAnonymous"}
+            <div class="sh-cont-nr-kg-yxplkg" onclick="nmkgz()" title="匿名发布" id="nmkgz" lang="0">
+                <i class="iconfont icon-anonymous {$editIsAnonymous ? 'ri-sxfbbqls' : 'ri-sxfbbq'}" id="nmkgimg"></i>
+                <input type="radio" name="nmkg" value="{$editIsAnonymous ? '1' : '0'}" checked id="nmmkz" style="display:none;">
+            </div>
+            {/if}
+
+            <div class="sh-cont-nr-kg-yxplkg" onclick="yxplkgz()" title="{$allowComment ? '允许评论' : '禁止评论'}" id="yxplkgz" lang="{$allowComment ? '1' : '0'}" style="background: {$allowComment ? 'var(--themetm)' : 'var(--fgxys)'};">
+                <i class="iconfont icon-pinglun-yx {$allowComment ? 'ri-sxfbbqls' : 'ri-sxfbbq'}" id="yxplkgimg"></i>
+                <input type="radio" name="yxplkg" value="{$allowComment ? '1' : '0'}" checked id="yxplmkz" style="display:none;">
+            </div>
+
+            {if condition="!$isEdit"}
+            <div class="sh-cont-nr-kg-lxqh" onclick="lxqhkg()" title="文章类型:图文" id="lxqh">
+                <i class="iconfont icon-tupian ri-sxfbbqls" id="lxqhimg"></i>
+                <input type="radio" name="radio" value="1" checked id="lxmk" style="display:none;">
+            </div>
+
+            <div class="sh-cont-nr-kg-twl" onclick="tpscfs()" title="切换外链图片" id="tpscfs" lang="0">
+                <i class="iconfont icon-qiehuan ri-sxfbbq" id="twlimg"></i>
+            </div>
+            {/if}
+
+            <div class="sh-cont-nr-kg-twl" onclick="attachToggle()" title="附件管理" id="attachBtn" lang="0">
+                <i class="iconfont icon-fujian ri-sxfbbq" id="attachBtnIcon"></i>
+            </div>
+            <div class="sh-cont-nr-kg-twl" onclick="togglePoll()" title="投票/问卷" id="pollBtn" lang="0">
+                <i class="iconfont icon-pinglun-yx ri-sxfbbq" id="pollBtnIcon"></i>
+            </div>
+        </div>
+
+        <div class="sh-pinglun-biao" id="biaoqing" style="display:none;">
+            {include file="component/emoji_picker" /}
+        </div>
+    </div>
+
+    <div class="sh-cont-dw">
+        <div class="sh-cont-dw-tu" onclick="hqdqip()" title="获取当前位置">
+            <i class="iconfont icon-31dingwei ri-sxgps" id="sh-cont-dw"></i>
+        </div>
+        <input type="text" name="dw" id="dwxx" value="{$editLocation}" placeholder="当前位置" minlength="1" maxlength="100" spellcheck="false">
+    </div>
+
+    {if condition="$tagsEnabled"}
+    <div class="sh-cont-dw">
+        <div class="sh-cont-dw-tu" title="标签">
+            <i class="iconfont icon-wenzhang ri-sxgps"></i>
+        </div>
+        <input type="text" name="tags" id="tagsxx" value="{$editTags}" placeholder="标签/话题，多个用空格或逗号分隔" maxlength="200" spellcheck="false">
+    </div>
+    {/if}
+
+    <div class="sh-cont-dw">
+        <div class="sh-cont-dw-tu" title="发布时间">
+            <i class="iconfont icon-shijian31 ri-sxgps"></i>
+        </div>
+        <input type="text" name="fbtime" id="fbtimexx" value="{$editTime}" placeholder="发布时间，未来时间会定时发布" minlength="1" maxlength="20" spellcheck="false" required>
+    </div>
+
+    <div class="sh-cont-gg" id="sh-cont-gg"{if condition="$editIsAd"} style="display:flex;"{/if}>
+        <input type="url" name="gg" id="gglj" value="{$editAdUrl}" placeholder="广告跳转链接" minlength="1" maxlength="2000" spellcheck="false">
+    </div>
+
+    <div class="sh-cont-yy" id="sh-cont-yy"{if condition="$editType === 'music'"} style="display:flex;"{else/} style="display:none;"{/if}>
+        <div class="music-platform-bar">
+            <input type="hidden" name="musicplatform" id="musicplatform" value="netease">
+            <div class="music-platform-item music-platform-active" data-val="netease" onclick="selectMusicPlatform(this)">
+                <span class="mp-dot" style="background:#e74c3c"></span><span>网易云</span>
+            </div>
+            <div class="music-platform-item" data-val="qq" onclick="selectMusicPlatform(this)">
+                <span class="mp-dot" style="background:#12b7f5"></span><span>QQ音乐</span>
+            </div>
+            <div class="music-platform-item" data-val="kugou" onclick="selectMusicPlatform(this)">
+                <span class="mp-dot" style="background:#2ac66d"></span><span>酷狗</span>
+            </div>
+            <div class="music-platform-item" data-val="kuwo" onclick="selectMusicPlatform(this)">
+                <span class="mp-dot" style="background:#ff6a00"></span><span>酷我</span>
+            </div>
+        </div>
+        <span>
+            <input type="text" name="music" id="music" value="{$editMusic.url}" placeholder="输入歌曲ID或链接" minlength="1" maxlength="2000" spellcheck="false" style="border-radius:4px 0 0 0;">
+            <p></p>
+            <input type="text" name="musicm" id="musicm" value="{$editMusic.name}" placeholder="歌名*" minlength="1" maxlength="2000" spellcheck="false" style="border-radius:0 4px 0 0;">
+        </span>
+        <div class="sh-cont-yy-fg"></div>
+        <span>
+            <input type="text" name="musics" id="musics" value="{$editMusic.artist}" placeholder="歌手*" minlength="1" maxlength="2000" spellcheck="false" style="border-radius:0 0 0 4px;">
+            <p></p>
+            <input type="text" name="musict" id="musict" value="{$editMusic.cover}" placeholder="封面链接" minlength="1" maxlength="2000" spellcheck="false" style="border-radius:0 0 4px 0;">
+        </span>
+    </div>
+
+    <div class="sh-cont-article" id="sh-cont-article"{if condition="$editType === 'article'"} style="display:flex;"{/if}>
+        <input type="text" name="article_title" id="article_title" value="{$editArticleTitle}" placeholder="文章标题*" maxlength="120" spellcheck="false">
+        <div class="sh-cont-article-tpl-row">
+            <select name="article_template" id="article_template">
+                <option value="">默认模板</option>
+                {volist name="articleTemplates" id="tpl"}
+                <option value="{$tpl}"{if condition="$editArticleTemplate === $tpl"} selected{/if}>{$tpl}</option>
+                {/volist}
+            </select>
+        </div>
+        <div class="sh-cont-article-cover-row">
+            <input type="hidden" name="article_cover_mode" id="article_cover_mode" value="link">
+            <div class="sh-cont-article-cover-link" id="article-cover-link">
+                <input type="text" name="article_cover" id="article_cover" value="{$editArticleCover}" placeholder="封面图链接（不填则自动提取正文图片）" maxlength="2000" spellcheck="false">
+            </div>
+            <div class="sh-cont-article-cover-upload" id="article-cover-upload" style="display:none;">
+                <div id="cupload-article-cover"></div>
+            </div>
+            <div class="sh-cont-article-cover-switch" onclick="articleCoverToggle()" title="切换上传图片" id="article_cover_switch" lang="link">
+                <i class="iconfont icon-qiehuan ri-sxfbbq" id="article_cover_switch_icon"></i>
+            </div>
+        </div>
+        <div class="sh-cont-article-cover-row" style="margin-top:6px;padding: 0 15px;"> 
+            <input type="color" name="cover_color_picker" id="cover_color_picker" value="" style="width:32px;height:28px;border:none;cursor:pointer;padding:0;background:none;">
+            <input type="text" name="cover_color" id="cover_color" value="{$editCoverColor}" placeholder="卡片色调，留空自动提取，如 #07182c" maxlength="20" spellcheck="false" style="flex:1;">
+            <span onclick="document.getElementById('cover_color').value='';document.getElementById('cover_color_picker').value='#000000';" style="cursor:pointer;font-size:12px;color:var(--text-secondary);margin-left:4px;" title="清除颜色">清除</span>
+        </div>
+        <div class="sh-article-tools">
+            <button type="button" onclick="ArticleEditor.togglePreview()">实时预览</button>
+            <button type="button" onclick="ArticleEditor.cropCover()">裁剪封面</button>
+            <button type="button" onclick="ArticleEditor.pickCoverColor()">提取主色</button>
+        </div>
+    </div>
+
+    <div class="sh-article-preview" id="articlePreviewPanel" style="display:none;">
+        <div class="sh-article-preview-head">
+            <span>Markdown 预览</span>
+            <small id="articlePreviewStatus">输入后自动更新</small>
+        </div>
+        <div class="sh-article-markdown sh-article-preview-body" id="articlePreviewBody"></div>
+    </div>
+
+    <div class="sh-cont-attach" id="sh-cont-attach" style="display:none;">
+        <div class="sh-cont-attach-list" id="attachList"></div>
+        <div class="sh-cont-attach-actions">
+            <label class="sh-cont-attach-btn">
+                <i class="iconfont icon-shangchuanfujian"></i> 上传文件
+                <input type="file" id="attachFileInput" style="display:none;" onchange="attachFileUpload(this)">
+            </label>
+            <div class="sh-cont-attach-btn" onclick="attachLinkAdd()">
+                <i class="iconfont icon-lianjie1"></i> 添加外链
+            </div>
+        </div>
+        <input type="hidden" name="attachments" id="attachmentsData" value="">
+    </div>
+
+    <!-- 外链弹窗 -->
+    <div class="sh-attach-modal" id="attachModal" style="display:none;" onclick="attachModalClose(event)">
+        <div class="sh-attach-modal-box" onclick="event.stopPropagation()">
+            <div class="sh-attach-modal-head">
+                <span>添加外链附件</span>
+                <i class="iconfont icon-quxiao" onclick="attachModalClose()"></i>
+            </div>
+            <div class="sh-attach-modal-body">
+                <div class="sh-attach-modal-field">
+                    <label>文件地址 <span style="color:#e74c3c">*</span></label>
+                    <input type="url" id="attLinkUrl" placeholder="https://example.com/file.zip" spellcheck="false">
+                </div>
+                <div class="sh-attach-modal-field">
+                    <label>文件名称</label>
+                    <input type="text" id="attLinkName" placeholder="如：项目源码.zip" maxlength="200" spellcheck="false">
+                </div>
+                <div class="sh-attach-modal-field">
+                    <label>文件说明</label>
+                    <input type="text" id="attLinkDesc" placeholder="如：包含前后端完整代码" maxlength="200" spellcheck="false">
+                </div>
+                <div class="sh-attach-modal-field">
+                    <label>提取码</label>
+                    <input type="text" id="attLinkCode" placeholder="留空则无提取码" maxlength="50" spellcheck="false">
+                </div>
+                <div class="sh-attach-modal-tip">添加后可在文章发布时一起提交，附件显示在文章末尾，登录用户可下载。</div>
+            </div>
+            <div class="sh-attach-modal-foot">
+                <div class="sh-attach-modal-btn sh-attach-modal-btn-cancel" onclick="attachModalClose()">取消</div>
+                <div class="sh-attach-modal-btn sh-attach-modal-btn-ok" onclick="attachModalConfirm()">确定添加</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 投票区域 -->
+    <div class="sh-cont-poll" id="sh-cont-poll" style="display:none;">
+        <div class="sh-cont-poll-header">
+            <span>投票/问卷</span>
+            <i class="iconfont icon-quxiao" onclick="togglePoll()"></i>
+        </div>
+        <div class="sh-cont-poll-body">
+            <input type="text" id="pollQuestion" placeholder="输入投票问题" maxlength="200" spellcheck="false">
+            <div class="sh-cont-poll-options" id="pollOptions">
+                <div class="sh-cont-poll-option">
+                    <input type="text" placeholder="选项 1" maxlength="100" spellcheck="false">
+                    <i class="iconfont icon-shanchu" onclick="removePollOption(this)"></i>
+                </div>
+                <div class="sh-cont-poll-option">
+                    <input type="text" placeholder="选项 2" maxlength="100" spellcheck="false">
+                    <i class="iconfont icon-shanchu" onclick="removePollOption(this)"></i>
+                </div>
+            </div>
+            <div class="sh-cont-poll-add" onclick="addPollOption()">
+                <i class="iconfont icon-lianjie1"></i> 添加选项
+            </div>
+            <div class="sh-cont-poll-settings">
+                <div class="sh-cont-poll-type">
+                    <label>
+                        <input type="radio" name="pollType" value="1" checked> 单选
+                    </label>
+                    <label>
+                        <input type="radio" name="pollType" value="2"> 多选
+                    </label>
+                </div>
+                <div class="sh-cont-poll-expire">
+                    <label>过期时间(可选):</label>
+                    <input type="datetime-local" id="pollExpire" style="border:1px solid var(--fgxys);border-radius:4px;padding:4px 8px;font-size:13px;">
+                </div>
+            </div>
+        </div>
+        <input type="hidden" name="poll_data" id="pollData" value="">
+    </div>
+
+    <div class="sh-cont-sp" id="sh-cont-sp"{if condition="$editType === 'video'"} style="display:flex;"{else/} style="display:none;"{/if}>
+        <input type="text" name="spp" id="spp" value="{$editVideo.url}" placeholder="视频链接" minlength="1" maxlength="2000" oninput="myScript()" spellcheck="false">
+    </div>
+    <div class="sh-cont-sp" id="sh-cont-spfm" style="{if condition="$editType === 'video'"}display:flex;{else/}display:none;{/if}margin-top:2px;">
+        <input type="text" name="sppfm" id="sppfm" value="{$editVideo.cover}" placeholder="视频封面" minlength="1" maxlength="2000" spellcheck="false">
+    </div>
+    <input type="hidden" name="video_cover_data" id="video_cover_data" value="">
+    <video src="{$editVideo.url}" controls controlslist="nodownload noplaybackrate noremoteplayback" poster="{$editVideo.cover}" oncontextmenu="return false" class="sh-content-video sh-cont-video" id="sh-content-video" muted playsinline webkit-playsinline preload="metadata" autoplay loop{if condition="$editType === 'video' && $editVideo['url'] !== ''"}{else/} style="display:none;"{/if}></video>
+    <div class="filsp" id="filsp"{if condition="$editType === 'video' && $editVideo['url'] === ''"} style="display:flex;"{else/} style="display:none;"{/if}>
+        <span class="cupload-upload-btn">+</span>
+        <input type="file" accept="video/*" name="file" id="files"><br>
+    </div>
+
+    <div class="sh-cont-img" id="sh-cont-img"{if condition="$isEdit && $editType !== 'img'"} style="display:none;"{/if}>
+        <div class="sh-cont-imgul" id="sh-cont-imgul">
+            <textarea name="imgul" class="form-controllul" placeholder="图片外链(一行一条,最多15条)"></textarea>
+        </div>
+        <div class="cupload-image-list-wk"><div id="cupload-7"></div></div>
+    </div>
+    {if condition="$isEdit"}
+    <input type="hidden" name="edwzimages" value="{$article['ptpimag'] ?? ''}">
+    <input type="hidden" name="edwztype" value="{$editType}">
+    {/if}
+
+    <input type="hidden" name="allkey" id="allkey" value="">
+    {if condition="$draftsEnabled"}
+    <div class="sh-article-drafts" id="articleDraftPanel">
+        <div class="sh-article-drafts-head">
+            <span id="articleAutosaveStatus">自动保存准备就绪</span>
+            <button type="button" onclick="ArticleEditor.loadDraftVersions()">查看版本</button>
+        </div>
+        <div class="sh-article-draft-list" id="articleDraftVersions"></div>
+    </div>
+    <div class="sh-cont-dw">
+        <div class="sh-cont-dw-tu" title="保存草稿">
+            <i class="iconfont icon-caogaoxiang ri-sxgps"></i>
+        </div>
+        <input type="button" value="保存草稿" onclick="setSaveStatus('draft');document.getElementById('edit-form').requestSubmit();" style="cursor:pointer;">
+    </div>
+    {/if}
+</form>
+
+<style>
+.music-platform-bar{display:flex;gap:8px;padding:0 15px;margin-bottom:8px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.music-platform-item{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:13px;color:var(--texths);background:var(--fgxys);cursor:pointer;white-space:nowrap;transition:all 0.2s;-webkit-tap-highlight-color:transparent;user-select:none}
+.music-platform-item:active{transform:scale(0.95)}
+.music-platform-active{background:var(--themetm);color:#fff}
+.music-platform-active .mp-dot{box-shadow:0 0 0 2px rgba(255,255,255,0.5)}
+.mp-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:box-shadow 0.2s}
+.sh-cont-attach{margin:8px 0;padding:10px 15px;background:var(--bg-card,#fff);border-radius:8px;display:none}
+.sh-cont-article-tpl-row{padding:0 15px;margin-bottom:8px}
+.sh-cont-article-tpl-row select{width:100%;padding:8px 12px;border:1px solid var(--fgxys,#ddd);border-radius:6px;font-size:14px;background:var(--cobg,#fff);color:var(--textqh,#333);outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23999' stroke-width='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.sh-cont-article-tpl-row select:focus{border-color:var(--theme,#4a90d9)}
+.sh-article-tools{display:flex;gap:8px;padding:8px 15px 2px;flex-wrap:wrap}
+.sh-article-tools button,.sh-article-drafts button{border:1px solid var(--fgxys,#ddd);background:var(--backbg,#f7f7f7);color:var(--textqh,#333);border-radius:4px;padding:6px 10px;font-size:13px;cursor:pointer}
+.sh-article-preview{margin:8px 15px 0;border:1px solid var(--fgxys,#ddd);border-radius:6px;overflow:hidden;background:var(--cobg,#fff)}
+.sh-article-preview-head{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid var(--fgxys,#eee);font-size:13px;color:var(--textqh,#333)}
+.sh-article-preview-head small{color:var(--texths,#999)}
+.sh-article-preview-body{max-height:420px;overflow:auto;padding:16px!important;font-size:14px!important;line-height:1.8!important}
+.sh-article-drafts{margin:8px 15px;border:1px solid var(--fgxys,#ddd);border-radius:6px;background:var(--cobg,#fff);overflow:hidden}
+.sh-article-drafts-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;font-size:13px;color:var(--texths,#999)}
+.sh-article-draft-list{display:none;border-top:1px solid var(--fgxys,#eee)}
+.sh-article-draft-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-top:1px solid var(--fgxys,#eee);font-size:13px}
+.sh-article-draft-item:first-child{border-top:0}
+.sh-article-draft-item span{min-width:0;color:var(--textqh,#333);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sh-article-draft-item small{color:var(--texths,#999);white-space:nowrap}
+.sh-cont-attach-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.sh-cont-attach-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-secondary,#f5f5f5);border-radius:6px;font-size:13px}
+.sh-cont-attach-item i{font-size:16px;color:var(--text-secondary,#999);flex-shrink:0}
+.sh-cont-attach-item .att-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sh-cont-attach-item .att-info:hover .att-name{color:var(--theme,#4a90d9);text-decoration:underline}
+.sh-cont-attach-item .att-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary,#333)}
+.sh-cont-attach-item .att-desc{font-size:12px;color:var(--text-secondary,#999);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sh-cont-attach-item .att-desc-empty{color:var(--texths,#bbb);font-style:italic}
+.sh-cont-attach-item .att-size{color:var(--text-secondary,#999);font-size:12px;flex-shrink:0}
+.sh-cont-attach-item .att-del{cursor:pointer;color:#e74c3c;font-size:14px;padding:2px 4px;flex-shrink:0}
+.sh-cont-attach-item .att-code{font-size:12px;color:var(--theme,#4a90d9);margin-left:4px}
+.sh-cont-attach-actions{display:flex;gap:8px}
+.sh-cont-attach-btn{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:var(--bg-secondary,#f5f5f5);border-radius:6px;font-size:13px;cursor:pointer;color:var(--text-primary,#333)}
+.sh-cont-attach-btn:hover{background:var(--fgxys,#e0e0e0)}
+.sh-cont-attach-btn input[type=file]{display:none}
+.sh-attach-view{margin-top:12px;padding:10px 15px;background:var(--bg-secondary,#f5f5f5);border-radius:8px}
+.sh-attach-view-title{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--text-primary,#333)}
+.sh-attach-view-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-color,#eee)}
+.sh-attach-view-item:last-child{border-bottom:none}
+.sh-attach-view-item a{color:var(--theme,#4a90d9);text-decoration:none}
+.sh-attach-view-item a:hover{text-decoration:underline}
+.sh-attach-view-item .att-code-tag{font-size:11px;background:var(--theme,#4a90d9);color:#fff;padding:1px 6px;border-radius:3px;margin-left:4px}
+.sh-attach-view-item .att-size{color:var(--text-secondary,#999);font-size:12px}
+.sh-attach-view-item .att-login{font-size:11px;color:#e67e22;margin-left:4px}
+.paste-upload-hint{position:fixed;bottom:20px;right:20px;background:var(--theme,#4a90d9);color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;z-index:9999;display:none}
+.sh-attach-modal{width:100%;max-width:550px;height:100%;display:none;justify-content:center;align-items:center;background:#00000026;position:fixed;bottom:0;z-index:100;backdrop-filter:saturate(100%) blur(2px);-webkit-backdrop-filter:saturate(100%) blur(2px);animation:move_2 0.20s}
+.sh-attach-modal-box{width:85%;max-width:400px;background:var(--cobg,#fff);border-radius:12px;box-shadow:0 4px 20px rgb(0 0 0 / 15%);animation:move_1 0.20s;overflow:hidden}
+.sh-attach-modal-head{width:100%;height:48px;display:flex;justify-content:space-between;align-items:center;padding:0 16px;box-sizing:border-box;border-bottom:1px solid var(--fgxys,#f0f0f0)}
+.sh-attach-modal-head span{font-size:15px;font-weight:600;color:var(--textqh,#333)}
+.sh-attach-modal-head i{font-size:18px;color:var(--texths,#999);cursor:pointer;padding:4px}
+.sh-attach-modal-body{padding:16px}
+.sh-attach-modal-field{margin-bottom:14px}
+.sh-attach-modal-field label{display:block;font-size:13px;color:var(--textqh,#333);margin-bottom:6px;font-weight:500}
+.sh-attach-modal-field input{width:100%;padding:10px 12px;border:1px solid var(--fgxys,#ddd);border-radius:8px;font-size:14px;background:var(--backbg,#f9f9f9);color:var(--textqh,#333);box-sizing:border-box;outline:none;transition:border-color 0.2s}
+.sh-attach-modal-field input:focus{border-color:var(--theme,#4a90d9);background:var(--cobg,#fff)}
+.sh-attach-modal-field input::placeholder{color:var(--texths,#bbb)}
+.sh-attach-modal-tip{font-size:12px;color:var(--texths,#999);line-height:1.6;margin-top:4px}
+.sh-attach-modal-foot{display:flex;border-top:1px solid var(--fgxys,#f0f0f0)}
+.sh-attach-modal-btn{flex:1;height:44px;display:flex;justify-content:center;align-items:center;font-size:15px;cursor:pointer;transition:background 0.2s;-webkit-tap-highlight-color:transparent}
+.sh-attach-modal-btn-cancel{color:var(--texths,#999);border-right:1px solid var(--fgxys,#f0f0f0)}
+.sh-attach-modal-btn-cancel:hover{background:var(--fgxys,#f5f5f5)}
+.sh-attach-modal-btn-ok{color:var(--theme,#4a90d9);font-weight:600}
+.sh-attach-modal-btn-ok:hover{background:var(--backbg,#f0f7ff)}
+</style>
+<script src="{:staticUrl('/assets/js/cupload.js')}"></script>
+<script src="{:staticUrl('/assets/js/article-editor.js')}"></script>
+<script>
+var cupload7 = new Cupload({
+    ele: '#cupload-7',
+    name: 'image',
+    num: 15{if condition="!empty($editImages)"},
+    data: {:json_encode($editImages, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)}{/if}
+});
+var cuploadArticleCover = new Cupload({
+    ele: '#cupload-article-cover',
+    name: 'article_cover_image',
+    num: 1,
+    width: 128,
+    height: 88
+});
+function setSaveStatus(status) {
+    var input = document.getElementById('save_status');
+    if (input) input.value = status === 'draft' ? 'draft' : 'publish';
+}
+var nmInput = document.getElementById('nmmkz');
+var nmButton = document.getElementById('nmkgz');
+var nmIcon = document.getElementById('nmkgimg');
+if (nmInput && nmButton && nmIcon && nmInput.value === '1') {
+    nmButton.lang = '1';
+    nmButton.style.background = 'var(--themetm)';
+    nmButton.title = '取消匿名';
+    nmIcon.className = 'iconfont icon-anonymous ri-sxfbbqls';
+}
+var ccPicker = document.getElementById('cover_color_picker');
+var ccText = document.getElementById('cover_color');
+if(ccPicker && ccText){
+    ccPicker.oninput = function(){ ccText.value = this.value; };
+    ccText.oninput = function(){ if(/^#[0-9a-fA-F]{6}$/.test(this.value)) ccPicker.value = this.value; };
+    if(ccText.value && /^#[0-9a-fA-F]{6}$/.test(ccText.value)) ccPicker.value = ccText.value;
+}
+
+// ============ 附件管理 ============
+var attachItems = {if condition="!empty($editAttachments)"}{:json_encode($editAttachments, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)}{else/}[]{/if};
+
+function attachToggle(){
+    var panel = document.getElementById('sh-cont-attach');
+    var btn = document.getElementById('attachBtn');
+    var icon = document.getElementById('attachBtnIcon');
+    if(panel.style.display === 'none'){
+        panel.style.display = 'block';
+        btn.lang = '1';
+        btn.style.background = 'var(--themetm)';
+        icon.className = 'iconfont icon-fujian ri-sxfbbqls';
+        attachRenderList();
+    }else{
+        panel.style.display = 'none';
+        btn.lang = '0';
+        btn.style.background = '';
+        icon.className = 'iconfont icon-fujian ri-sxfbbq';
+    }
+}
+
+var attachEditIdx = -1;
+
+function attachRenderList(){
+    var list = document.getElementById('attachList');
+    var dataInput = document.getElementById('attachmentsData');
+    if(!list) return;
+    list.innerHTML = '';
+    attachItems.forEach(function(item, idx){
+        var sizeText = '';
+        if(item.size > 0){
+            if(item.size > 1048576) sizeText = (item.size/1048576).toFixed(1) + 'MB';
+            else if(item.size > 1024) sizeText = (item.size/1024).toFixed(0) + 'KB';
+            else sizeText = item.size + 'B';
+        }
+        var codeHtml = item.code ? '<span class="att-code">提取码: ' + item.code + '</span>' : '';
+        var iconClass = item.type === 'link' ? 'icon-lianjie1' : 'icon-fujian';
+        var displayName = item.name || item.url;
+        var displayDesc = item.desc || '';
+        list.innerHTML += '<div class="sh-cont-attach-item">' +
+            '<i class="iconfont ' + iconClass + '"></i>' +
+            '<div class="att-info" onclick="attachEditItem(' + idx + ')" style="cursor:pointer">' +
+            '<span class="att-name">' + displayName + '</span>' +
+            (displayDesc ? '<span class="att-desc">' + displayDesc + '</span>' : '<span class="att-desc att-desc-empty">点击编辑附件信息</span>') +
+            '</div>' +
+            (sizeText ? '<span class="att-size">' + sizeText + '</span>' : '') +
+            codeHtml +
+            '<span class="att-del" onclick="attachRemove(' + idx + ')">&times;</span>' +
+            '</div>';
+    });
+    dataInput.value = JSON.stringify(attachItems);
+}
+
+function attachEditItem(idx){
+    var item = attachItems[idx];
+    if(!item) return;
+    attachEditIdx = idx;
+    document.getElementById('attLinkUrl').value = item.url || '';
+    document.getElementById('attLinkName').value = item.name || '';
+    document.getElementById('attLinkDesc').value = item.desc || '';
+    document.getElementById('attLinkCode').value = item.code || '';
+    document.querySelector('#attachModal .sh-attach-modal-head span').textContent = '编辑附件';
+    document.querySelector('#attachModal .sh-attach-modal-btn-ok').textContent = '确定保存';
+    if(item.type !== 'link'){
+        document.getElementById('attLinkUrl').readOnly = true;
+        document.getElementById('attLinkUrl').style.opacity = '0.6';
+    }else{
+        document.getElementById('attLinkUrl').readOnly = false;
+        document.getElementById('attLinkUrl').style.opacity = '1';
+    }
+    document.getElementById('attachModal').style.display = 'flex';
+}
+
+function attachRemove(idx){
+    attachItems.splice(idx, 1);
+    attachRenderList();
+}
+
+function attachFileUpload(input){
+    if(!input.files || !input.files[0]) return;
+    var file = input.files[0];
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('allkey', myallkeyVar || '');
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/upload/file');
+    xhr.onload = function(){
+        try{ var res = JSON.parse(xhr.responseText); }catch(e){ var res = {code:500,msg:'服务器错误'}; }
+        if(res.code == '200' || res.code == 200){
+            var d = res.data || {};
+            attachItems.push({type:'file', url:d.url, name:d.name||file.name, desc:'', size:d.size||file.size, code:''});
+            attachRenderList();
+            if(typeof successpop === 'function') successpop('附件上传成功');
+        }else{
+            if(typeof errorpop === 'function') errorpop(res.msg || '上传失败');
+        }
+    };
+    xhr.onerror = function(){ if(typeof errorpop === 'function') errorpop('网络错误'); };
+    xhr.send(fd);
+    input.value = '';
+}
+
+function attachLinkAdd(){
+    attachEditIdx = -1;
+    document.getElementById('attLinkUrl').value = '';
+    document.getElementById('attLinkName').value = '';
+    document.getElementById('attLinkDesc').value = '';
+    document.getElementById('attLinkCode').value = '';
+    document.getElementById('attLinkUrl').readOnly = false;
+    document.getElementById('attLinkUrl').style.opacity = '1';
+    document.querySelector('#attachModal .sh-attach-modal-head span').textContent = '添加外链附件';
+    document.querySelector('#attachModal .sh-attach-modal-btn-ok').textContent = '确定添加';
+    document.getElementById('attachModal').style.display = 'flex';
+}
+
+function attachModalClose(e){
+    if(e && e.target !== e.currentTarget) return;
+    attachEditIdx = -1;
+    document.getElementById('attachModal').style.display = 'none';
+}
+
+function attachModalConfirm(){
+    var url = document.getElementById('attLinkUrl').value.trim();
+    if(!url){
+        if(typeof warnpop === 'function') warnpop('请填写文件地址');
+        document.getElementById('attLinkUrl').focus();
+        return;
+    }
+    if(url.indexOf('http') !== 0 && url.indexOf('/') !== 0){
+        if(typeof warnpop === 'function') warnpop('文件地址格式不正确');
+        document.getElementById('attLinkUrl').focus();
+        return;
+    }
+    var name = document.getElementById('attLinkName').value.trim();
+    var desc = document.getElementById('attLinkDesc').value.trim();
+    var code = document.getElementById('attLinkCode').value.trim();
+    if(attachEditIdx >= 0 && attachItems[attachEditIdx]){
+        var item = attachItems[attachEditIdx];
+        item.url = url;
+        item.name = name || url;
+        item.desc = desc;
+        item.code = code;
+        attachRenderList();
+        if(typeof successpop === 'function') successpop('附件已更新');
+    }else{
+        attachItems.push({type:'link', url:url, name:name || url, desc:desc, size:0, code:code});
+        attachRenderList();
+        if(typeof successpop === 'function') successpop('外链已添加');
+    }
+    attachEditIdx = -1;
+    document.getElementById('attachModal').style.display = 'none';
+}
+
+attachRenderList();
+
+// ============ 粘贴图片自动上传 ============
+(function(){
+    var textarea = document.getElementById('bletext');
+    if(!textarea) return;
+    var uploading = 0;
+    textarea.addEventListener('paste', function(e){
+        var typeInput = document.getElementById('lxmk');
+        if(!typeInput || typeInput.value !== '4') return; // 仅文章类型
+        var items = (e.clipboardData || window.clipboardData).items;
+        if(!items) return;
+        for(var i = 0; i < items.length; i++){
+            if(items[i].type.indexOf('image') !== -1){
+                e.preventDefault();
+                var file = items[i].getAsFile();
+                if(!file) continue;
+                uploadPastedImage(file, textarea);
+            }
+        }
+    });
+
+    function uploadPastedImage(file, ta){
+        uploading++;
+        showPasteHint('正在上传图片...');
+        var fd = new FormData();
+        fd.append('file', file);
+        fd.append('allkey', myallkeyVar || '');
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload/image');
+        xhr.onload = function(){
+            uploading--;
+            try{ var res = JSON.parse(xhr.responseText); }catch(e){ var res = {code:500}; }
+            if((res.code == '200' || res.code == 200) && res.data && res.data.url){
+                var md = '![图片](' + res.data.url + ')';
+                insertAtCursor(ta, md);
+                if(typeof successpop === 'function') successpop('图片上传成功');
+            }else{
+                if(typeof errorpop === 'function') errorpop(res.msg || '图片上传失败');
+            }
+            if(uploading <= 0) hidePasteHint();
+        };
+        xhr.onerror = function(){
+            uploading--;
+            if(typeof errorpop === 'function') errorpop('网络错误');
+            if(uploading <= 0) hidePasteHint();
+        };
+        xhr.send(fd);
+    }
+
+    function insertAtCursor(ta, text){
+        var start = ta.selectionStart;
+        var end = ta.selectionEnd;
+        var before = ta.value.substring(0, start);
+        var after = ta.value.substring(end);
+        ta.value = before + text + after;
+        var newPos = start + text.length;
+        ta.selectionStart = ta.selectionEnd = newPos;
+        ta.focus();
+        ta.dispatchEvent(new Event('input'));
+    }
+
+    var hintEl = null;
+    function showPasteHint(msg){
+        if(!hintEl){
+            hintEl = document.createElement('div');
+            hintEl.className = 'paste-upload-hint';
+            document.body.appendChild(hintEl);
+        }
+        hintEl.textContent = msg;
+        hintEl.style.display = 'block';
+    }
+    function hidePasteHint(){
+        if(hintEl) hintEl.style.display = 'none';
+    }
+
+    // ============ 投票功能 ============
+    function togglePoll(){
+        var panel = document.getElementById('sh-cont-poll');
+        var btn = document.getElementById('pollBtn');
+        var icon = document.getElementById('pollBtnIcon');
+        if(panel.style.display === 'none'){
+            panel.style.display = 'block';
+            btn.lang = '1';
+            btn.style.background = 'var(--themetm)';
+            icon.className = 'iconfont icon-pinglun-yx ri-sxfbbqls';
+        }else{
+            panel.style.display = 'none';
+            btn.lang = '0';
+            btn.style.background = '';
+            icon.className = 'iconfont icon-pinglun-yx ri-sxfbbq';
+        }
+        updatePollData();
+    }
+
+    function addPollOption(){
+        var container = document.getElementById('pollOptions');
+        var count = container.children.length + 1;
+        if(count > 10){
+            warnpop('最多10个选项');
+            return;
+        }
+        var div = document.createElement('div');
+        div.className = 'sh-cont-poll-option';
+        div.innerHTML = '<input type="text" placeholder="选项 ' + count + '" maxlength="100" spellcheck="false">' +
+            '<i class="iconfont icon-shanchu" onclick="removePollOption(this)"></i>';
+        container.appendChild(div);
+        updatePollData();
+    }
+
+    function removePollOption(el){
+        var container = document.getElementById('pollOptions');
+        if(container.children.length <= 2){
+            warnpop('至少需要2个选项');
+            return;
+        }
+        el.parentElement.remove();
+        // 重新编号
+        var options = container.querySelectorAll('.sh-cont-poll-option input');
+        options.forEach(function(input, i){
+            input.placeholder = '选项 ' + (i + 1);
+        });
+        updatePollData();
+    }
+
+    function updatePollData(){
+        var panel = document.getElementById('sh-cont-poll');
+        var dataInput = document.getElementById('pollData');
+        if(panel.style.display === 'none'){
+            dataInput.value = '';
+            return;
+        }
+        var question = document.getElementById('pollQuestion').value.trim();
+        var options = [];
+        var inputs = document.querySelectorAll('#pollOptions .sh-cont-poll-option input');
+        inputs.forEach(function(input){
+            var val = input.value.trim();
+            if(val) options.push(val);
+        });
+        var type = document.querySelector('input[name="pollType"]:checked').value;
+        var expire = document.getElementById('pollExpire').value;
+        if(question && options.length >= 2){
+            dataInput.value = JSON.stringify({
+                question: question,
+                options: options,
+                type: parseInt(type),
+                expire_at: expire || null
+            });
+        }else{
+            dataInput.value = '';
+        }
+    }
+
+    function currentPollSnapshot(){
+        var dataInput = document.getElementById('pollData');
+        if(!dataInput || !dataInput.value) return '';
+        try {
+            var data = JSON.parse(dataInput.value);
+            return JSON.stringify({
+                question: (data.question || '').trim(),
+                options: (data.options || []).map(function(opt){ return (opt || '').trim(); }).filter(Boolean),
+                type: parseInt(data.type || 1),
+                expire_at: data.expire_at || null
+            });
+        } catch(e) {
+            return '';
+        }
+    }
+
+    // 监听投票输入变化
+    document.getElementById('pollQuestion').addEventListener('input', updatePollData);
+    document.getElementById('pollOptions').addEventListener('input', updatePollData);
+    document.getElementById('pollExpire').addEventListener('change', updatePollData);
+    document.querySelectorAll('input[name="pollType"]').forEach(function(radio){
+        radio.addEventListener('change', updatePollData);
+    });
+
+    // 暴露到全局作用域（供onclick调用）
+    window.togglePoll = togglePoll;
+    window.addPollOption = addPollOption;
+    window.removePollOption = removePollOption;
+    window.confirmPollChangeIfNeeded = function(){
+        var confirmInput = document.getElementById('pollChangeConfirm');
+        if(confirmInput) confirmInput.value = '0';
+        if(!window.__SANQI_EDIT_POLL_SNAPSHOT__) return true;
+        if(currentPollSnapshot() === window.__SANQI_EDIT_POLL_SNAPSHOT__) return true;
+        if(!confirm('修改或删除投票将清空已有投票记录，确定继续保存吗？')) {
+            return false;
+        }
+        if(confirmInput) confirmInput.value = '1';
+        return true;
+    };
+
+    // 编辑模式：加载已有投票
+    {notempty name="editPoll"}
+    (function(){
+        var poll = {:json_encode($editPoll, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)};
+        if(poll && poll.question){
+            togglePoll();
+            document.getElementById('pollQuestion').value = poll.question;
+            // 清空默认选项，填入已有选项
+            var container = document.getElementById('pollOptions');
+            container.innerHTML = '';
+            (poll.options || []).forEach(function(text, i){
+                var div = document.createElement('div');
+                div.className = 'sh-cont-poll-option';
+                var inp = document.createElement('input');
+                inp.type = 'text'; inp.placeholder = '选项 ' + (i+1);
+                inp.maxLength = 100; inp.spellcheck = false; inp.value = text;
+                var del = document.createElement('i');
+                del.className = 'iconfont icon-shanchu';
+                del.onclick = function(){ removePollOption(this); };
+                div.appendChild(inp); div.appendChild(del);
+                container.appendChild(div);
+            });
+            // 设置单选/多选
+            var typeVal = poll.type || 1;
+            var radio = document.querySelector('input[name="pollType"][value="' + typeVal + '"]');
+            if(radio) radio.checked = true;
+            // 设置过期时间
+            if(poll.expire_at){
+                document.getElementById('pollExpire').value = poll.expire_at.replace(' ', 'T').substring(0, 16);
+            }
+            updatePollData();
+            window.__SANQI_EDIT_POLL_SNAPSHOT__ = currentPollSnapshot();
+        }
+    })();
+    {/notempty}
+})();
+</script>

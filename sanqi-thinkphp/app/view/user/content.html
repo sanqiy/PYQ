@@ -1,0 +1,37 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{php}
+/**
+ * Public user profile timeline.
+ */
+$previousYear = '';
+{/php}
+
+<!-- 置顶模块 -->
+{include file="component/sticky_module" /}
+
+<div class="sh-homecontent" id="sh-nrbk">
+    {volist name="articles" id="article"}
+    {php}
+    $time = strtotime($article['ptptime'] ?? '') ?: time();
+    $year = date('Y', $time);
+    if ($year !== $previousYear) {
+        if (date('Y') !== $year) {
+            echo '<h2 class="sh-homecontent-timed">' . $year . '<span class="sh-homecontent-timed-n">年</span></h2>';
+        }
+        $previousYear = $year;
+    }
+
+    echo \think\facade\View::fetch('component/timeline_item', [
+        'post' => $article,
+        'siteConfig' => $siteConfig
+    ]);
+    {/php}
+    {/volist}
+</div>
+<input type="hidden" id="timeline-user" value="{$targetUser.username|default=''}">

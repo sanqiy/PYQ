@@ -1,0 +1,13 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{php}
+$pickerEmojis = emojiPickerList();
+foreach ($pickerEmojis as $emoji):
+{/php}
+<img src="/assets/img/thumbnail.svg" data-src="/assets/owo/{$emoji.category}/{$emoji.filename}" alt="{$emoji.code}" onclick="biaoqzj(event)">
+{php}endforeach;{/php}

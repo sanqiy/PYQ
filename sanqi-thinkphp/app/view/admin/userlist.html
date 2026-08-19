@@ -1,0 +1,277 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{extend name="admin/layout" /}
+
+{block name="content"}
+<div class="card mb-4">
+    <div class="card-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="mb-0">用户列表 ({:intval($total)})</h5>
+            </div>
+            <div class="col-auto">
+                <form class="d-flex" method="get">
+                    <input type="text" class="form-control form-control-sm me-2" name="keyword" value="{$keyword}" placeholder="账号/昵称/邮箱前缀" maxlength="64">
+                    <button type="submit" class="btn btn-sm btn-outline-primary">搜索</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        {notempty name="searchTooShort"}
+        <div class="alert alert-warning py-2">搜索关键词至少需要 2 个字符，且只支持前缀搜索。</div>
+        {/notempty}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>账号</th>
+                        <th>昵称</th>
+                        <th>邮箱</th>
+                        <th>发布权限</th>
+                        <th>状态</th>
+                        <th>注册时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {volist name="users" id="u"}
+                    <tr>
+                        <td>{:intval($u['id'])}</td>
+                        <td>{$u.username|default=''}</td>
+                        <td>{$u.name|default=''}</td>
+                        <td>{$u.email|default=''}</td>
+                        <td>
+                            {if condition="in_array((string)($u['essqx'] ?? '0'), ['1', '2'], true)"}
+                            <span class="badge bg-success">正常</span>
+                            {else}
+                            <span class="badge bg-secondary">只读</span>
+                            {/if}
+                        </td>
+                        <td>
+                            {if condition="isFlag($u['ban'] ?? 0) === 0"}
+                            <span class="badge bg-success">正常</span>
+                            {else}
+                            <span class="badge bg-danger">封禁</span>
+                            {/if}
+                        </td>
+                        <td>{$u.regtime|default=''}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-primary" type="button" data-user="{:admin_json_attr($u)}" onclick="editUser(this)">编辑</button>
+                                {if condition="isFlag($u['ban'] ?? 0) === 0"}
+                                <button class="btn btn-outline-warning" onclick="banUser({:intval($u['id'])})">封禁</button>
+                                {else}
+                                <button class="btn btn-outline-success" onclick="unbanUser({:intval($u['id'])})">解封</button>
+                                {/if}
+                                <button class="btn btn-outline-info" onclick="togglePermission({:intval($u['id'])}, {:intval($u['essqx'] ?? 0)})">
+                                    {:in_array((string)($u['essqx'] ?? '0'), ['1', '2'], true) ? '设为只读' : '允许发布'}
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="deleteUser({:intval($u['id'])})">删除</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {/volist}
+                </tbody>
+            </table>
+        </div>
+
+        {php}$totalPages = (int)ceil($total / $pageSize);{/php}
+        {if condition="$totalPages > 1"}
+        <nav>
+            <ul class="pagination justify-content-center">
+                {if condition="$page > 1"}
+                <li class="page-item"><a class="page-link" href="?page={$page-1}&keyword={:urlencode($keyword)}">上一页</a></li>
+                {/if}
+                {php}$pageWindow = \app\service\AdminListService::pageWindow($page, $totalPages);{/php}
+                {volist name="pageWindow" id="i"}
+                <li class="page-item {$i == $page ? 'active' : ''}">
+                    <a class="page-link" href="?page={$i}&keyword={:urlencode($keyword)}">{$i}</a>
+                </li>
+                {/volist}
+                {if condition="$page < $totalPages"}
+                <li class="page-item"><a class="page-link" href="?page={$page+1}&keyword={:urlencode($keyword)}">下一页</a></li>
+                {/if}
+            </ul>
+        </nav>
+        {/if}
+    </div>
+</div>
+
+<div class="modal fade" id="userEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <form id="userEditForm">
+                <div class="modal-header">
+                    <h5 class="modal-title">编辑用户</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="id" id="editUserId">
+                    <input type="hidden" name="action" value="edit">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">账号</label>
+                            <input type="text" class="form-control" name="username" id="editUsername" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-control" name="email" id="editEmail" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">昵称</label>
+                            <input type="text" class="form-control" name="name" id="editName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">网站</label>
+                            <input type="text" class="form-control" name="url" id="editUrl">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">头像链接</label>
+                            <input type="text" class="form-control" name="img" id="editImg">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">封面链接</label>
+                            <input type="text" class="form-control" name="homeimg" id="editHomeimg">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">签名</label>
+                            <input type="text" class="form-control" name="sign" id="editSign">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">发布权限</label>
+                            <select class="form-select" name="essqx" id="editEssqx">
+                                <option value="0">只读</option>
+                                <option value="1">允许发布</option>
+                                <option value="2">允许发布</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">邮件提醒</label>
+                            <select class="form-select" name="esseam" id="editEsseam">
+                                <option value="0">不接收</option>
+                                <option value="1">接收</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">账号状态</label>
+                            <select class="form-select" name="ban" id="editBan">
+                                <option value="0">正常</option>
+                                <option value="1">封禁</option>
+                                <option value="-1">封禁</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">解封时间</label>
+                            <input type="text" class="form-control" name="bantime" id="editBantime" placeholder="true 或日期">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">注册时间</label>
+                            <input type="text" class="form-control" id="editRegtime" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">最后登录</label>
+                            <input type="text" class="form-control" id="editLogtime" disabled>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{/block}
+
+{block name="extraJs"}
+<script>
+function setUserValue(id, value) {
+    var el = document.getElementById(id);
+    if (el) el.value = value == null ? '' : value;
+}
+
+function editUser(button) {
+    var user = JSON.parse(button.getAttribute('data-user') || '{}');
+    setUserValue('editUserId', user.id);
+    setUserValue('editUsername', user.username);
+    setUserValue('editEmail', user.email);
+    setUserValue('editName', user.name);
+    setUserValue('editImg', user.img);
+    setUserValue('editUrl', user.url);
+    setUserValue('editHomeimg', user.homeimg);
+    setUserValue('editSign', user.sign);
+    setUserValue('editEssqx', user.essqx == null ? '0' : user.essqx);
+    setUserValue('editEsseam', user.esseam == null ? '0' : user.esseam);
+    setUserValue('editBan', user.ban == null ? '0' : user.ban);
+    setUserValue('editBantime', user.bantime);
+    setUserValue('editRegtime', user.regtime);
+    setUserValue('editLogtime', user.logtime);
+
+    $('#userEditModal').modal('show');
+}
+
+document.getElementById('userEditForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    ajaxRequest('/admin/userlist/update', $(this).serialize(), function() {
+        location.reload();
+    });
+});
+
+function banUser(id) {
+    var days = prompt('封禁天数，留空为永久封禁：');
+    if (days === null) return;
+
+    ajaxRequest('/admin/userlist/update', {
+        id: id,
+        action: 'ban',
+        value: days ? new Date(Date.now() + days * 86400000).toISOString().split('T')[0] : 'true'
+    }, function() {
+        location.reload();
+    });
+}
+
+function unbanUser(id) {
+    confirmAction('确定要解封该用户吗？', function() {
+        ajaxRequest('/admin/userlist/update', {
+            id: id,
+            action: 'unban'
+        }, function() {
+            location.reload();
+        });
+    });
+}
+
+function togglePermission(id, current) {
+    var newPermission = (current == 1 || current == 2) ? 0 : 1;
+    ajaxRequest('/admin/userlist/update', {
+        id: id,
+        action: 'permission',
+        value: newPermission
+    }, function() {
+        location.reload();
+    });
+}
+
+function deleteUser(id) {
+    confirmAction('确定要删除该用户吗？这将删除该用户的所有数据！', function() {
+        ajaxRequest('/admin/userlist/update', {
+            id: id,
+            action: 'delete'
+        }, function() {
+            location.reload();
+        }, {
+            requirePassword: true,
+            passwordMessage: '删除用户会删除该用户所有数据，请输入管理员密码确认：'
+        });
+    });
+}
+</script>
+{/block}

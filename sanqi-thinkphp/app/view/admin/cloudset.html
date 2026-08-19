@@ -1,0 +1,280 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{extend name="admin/layout" /}
+
+{block name="content"}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">云存储设置</h5>
+    </div>
+    <div class="card-body">
+        <form id="cloudForm">
+            <div class="mb-3">
+                <label class="form-label">存储类型</label>
+                <select class="form-select" id="storageType" name="type">
+                    <option value="upyun" {$cloudConfig['type']=='upyun' ? 'selected' : ''}>又拍云</option>
+                    <option value="aliyun" {$cloudConfig['type']=='aliyun' ? 'selected' : ''}>阿里云 OSS</option>
+                    <option value="s3_r2" {($cloudConfig['type']=='s3' && ($cloudConfig['s3_provider'] ?? '')=='r2') ? 'selected' : ''}>Cloudflare R2</option>
+                    <option value="s3_b2" {($cloudConfig['type']=='s3' && ($cloudConfig['s3_provider'] ?? '')=='b2') ? 'selected' : ''}>Backblaze B2</option>
+                    <option value="s3_s3" {($cloudConfig['type']=='s3' && ($cloudConfig['s3_provider'] ?? '')=='s3') ? 'selected' : ''}>Amazon S3</option>
+                    <option value="s3_minio" {($cloudConfig['type']=='s3' && ($cloudConfig['s3_provider'] ?? '')=='minio') ? 'selected' : ''}>MinIO</option>
+                    <option value="s3_spaces" {($cloudConfig['type']=='s3' && ($cloudConfig['s3_provider'] ?? '')=='spaces') ? 'selected' : ''}>DigitalOcean Spaces</option>
+                </select>
+            </div>
+
+            <!-- 又拍云配置 -->
+            <div id="fields_upyun" class="provider-fields">
+                <div class="mb-3">
+                    <label class="form-label">空间名称 (Bucket)</label>
+                    <input type="text" class="form-control" name="bucketName"
+                           value="{$cloudConfig.bucketName|default=''}"
+                           placeholder="例如：my-bucket">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">操作员名称</label>
+                    <input type="text" class="form-control" name="operatorName"
+                           value="{$cloudConfig.operatorName|default=''}"
+                           placeholder="又拍云操作员账号">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">操作员密码</label>
+                    <input type="password" class="form-control" name="operatorPassword"
+                           value="{$cloudConfig.operatorPassword|default=''}"
+                           placeholder="又拍云操作员密码">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">域名绑定</label>
+                    <input type="url" class="form-control" name="operatorurl"
+                           value="{$cloudConfig.operatorurl|default=''}"
+                           placeholder="https://example.upaiyun.com">
+                    <div class="form-text">又拍云绑定的域名，用于生成文件访问地址</div>
+                </div>
+            </div>
+
+            <!-- 阿里云OSS配置 -->
+            <div id="fields_aliyun" class="provider-fields" style="display:none;">
+                <div class="mb-3">
+                    <label class="form-label">AccessKey ID</label>
+                    <input type="text" class="form-control" name="accessKeyId"
+                           value="{if condition="$cloudConfig['type'] == 'aliyun'"}{$cloudConfig.accessKeyId|default=''}{/if}"
+                           placeholder="阿里云AccessKey ID">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">AccessKey Secret</label>
+                    <input type="password" class="form-control" name="accessKeySecret"
+                           value="{if condition="$cloudConfig['type'] == 'aliyun'"}{$cloudConfig.accessKeySecret|default=''}{/if}"
+                           placeholder="阿里云AccessKey Secret">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Endpoint</label>
+                    <input type="text" class="form-control" name="endpoint"
+                           value="{if condition="$cloudConfig['type'] == 'aliyun'"}{$cloudConfig.endpoint|default=''}{/if}"
+                           placeholder="例如：oss-cn-hangzhou.aliyuncs.com">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Bucket名称</label>
+                    <input type="text" class="form-control" name="bucket"
+                           value="{if condition="$cloudConfig['type'] == 'aliyun'"}{$cloudConfig.bucket|default=''}{/if}"
+                           placeholder="例如：my-bucket">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">访问域名</label>
+                    <input type="url" class="form-control" name="operatorurl_aliyun"
+                           value="{if condition="$cloudConfig['type'] == 'aliyun'"}{$cloudConfig.operatorurl|default=''}{/if}"
+                           placeholder="https://my-bucket.oss-cn-hangzhou.aliyuncs.com">
+                    <div class="form-text">OSS绑定的域名，用于生成文件访问地址</div>
+                </div>
+            </div>
+
+            <!-- S3 兼容存储配置 -->
+            <div id="fields_s3" class="provider-fields" style="display:none;">
+                <input type="hidden" id="s3_provider" name="s3_provider" value="{$cloudConfig['s3_provider']|default='s3'}">
+                <div class="mb-3">
+                    <label class="form-label">Endpoint</label>
+                    <input type="text" class="form-control" name="s3_endpoint"
+                           value="{if condition="$cloudConfig['type'] == 's3'"}{$cloudConfig.endpoint|default=''}{/if}"
+                           placeholder=""
+                           id="s3_endpoint">
+                    <div class="form-text" id="s3_endpoint_hint"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Region</label>
+                    <input type="text" class="form-control" name="s3_region"
+                           value="{if condition="$cloudConfig['type'] == 's3'"}{$cloudConfig.region|default='us-east-1'}{else}us-east-1{/if}"
+                           placeholder="例如：us-east-1"
+                           id="s3_region">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Access Key ID</label>
+                    <input type="text" class="form-control" name="s3_accessKeyId"
+                           value="{if condition="$cloudConfig['type'] == 's3'"}{$cloudConfig.accessKeyId|default=''}{/if}"
+                           placeholder="S3 Access Key ID">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Secret Access Key</label>
+                    <input type="password" class="form-control" name="s3_accessKeySecret"
+                           value="{if condition="$cloudConfig['type'] == 's3'"}{$cloudConfig.accessKeySecret|default=''}{/if}"
+                           placeholder="S3 Secret Access Key">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Bucket 名称</label>
+                    <input type="text" class="form-control" name="s3_bucket"
+                           value="{if condition="$cloudConfig['type'] == 's3'"}{$cloudConfig.bucket|default=''}{/if}"
+                           placeholder="例如：my-bucket">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">访问域名</label>
+                    <input type="url" class="form-control" name="s3_operatorurl"
+                           value="{if condition="$cloudConfig['type'] == 's3'"}{$cloudConfig.operatorurl|default=''}{/if}"
+                           placeholder="https://custom-domain.com">
+                    <div class="form-text">自定义域名或 CDN 域名，用于生成文件访问地址。留空则使用默认域名。</div>
+                </div>
+            </div>
+
+            <!-- 通用选项 -->
+            <div class="form-check form-switch mb-3">
+                <input type="hidden" name="keep_local_after_cloud" value="0">
+                <input class="form-check-input" type="checkbox" name="keep_local_after_cloud" value="1" id="keepLocal" {:($cloudConfig['keep_local_after_cloud'] ?? '1') === '1' ? 'checked' : ''}>
+                <label class="form-check-label" for="keepLocal">上传到云存储后保留本地文件</label>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">保存配置</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="testConnection()">测试连接</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">使用说明</h5>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info mb-0">
+            <h6><i class="bi bi-info-circle"></i> 云存储配置说明</h6>
+            <ul class="mb-0">
+                <li>配置云存储后，新上传的文件将自动同步到云端</li>
+                <li>本地文件仍会保留一份作为备份</li>
+                <li>如需迁移已有文件，请手动将 <code>public/upload/</code> 目录下的文件上传至云端对应目录</li>
+                <li>云存储目录结构：<code>meimiao/image/</code>、<code>meimiao/video/</code>、<code>meimiao/avatar/</code>、<code>meimiao/cover/</code></li>
+                <li>如不配置云存储，文件将仅保存在本地</li>
+                <li>S3 兼容存储（R2/B2/S3/MinIO/Spaces）共用同一套协议，填写对应的 Endpoint 和密钥即可</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{/block}
+
+{block name="extraJs"}
+<script>
+// S3 服务商默认配置
+var s3Defaults = {
+    r2:     { endpoint: '',                           region: 'auto',     hint: '格式：{accountId}.r2.cloudflarestorage.com' },
+    b2:     { endpoint: 's3.us-west-004.backblazeb2.com', region: 'us-west-004', hint: '格式：s3.{region}.backblazeb2.com' },
+    s3:     { endpoint: 's3.us-east-1.amazonaws.com', region: 'us-east-1', hint: '格式：s3.{region}.amazonaws.com' },
+    minio:  { endpoint: '',                           region: 'us-east-1', hint: '格式：localhost:9000 或 your-server.com' },
+    spaces: { endpoint: 'nyc3.digitaloceanspaces.com', region: 'us-east-1', hint: '格式：{region}.digitaloceanspaces.com' }
+};
+
+// 切换存储类型
+$('#storageType').on('change', function() {
+    var val = $(this).val();
+    $('.provider-fields').hide();
+
+    if (val === 'upyun') {
+        $('#fields_upyun').show();
+    } else if (val === 'aliyun') {
+        $('#fields_aliyun').show();
+    } else {
+        // S3 类型
+        $('#fields_s3').show();
+        var provider = val.replace('s3_', '');
+        $('#s3_provider').val(provider);
+        applyS3Defaults(provider);
+    }
+});
+
+// 应用 S3 默认配置
+function applyS3Defaults(provider) {
+    var d = s3Defaults[provider] || s3Defaults['s3'];
+    var $ep = $('#s3_endpoint');
+    // 仅在当前值为空或等于另一个默认值时才覆盖
+    if (!$ep.val() || $ep.data('auto-filled') === '1') {
+        $ep.val(d.endpoint).data('auto-filled', '1');
+    }
+    var $rg = $('#s3_region');
+    if (!$rg.val() || $rg.data('auto-filled') === '1') {
+        $rg.val(d.region).data('auto-filled', '1');
+    }
+    $('#s3_endpoint_hint').text(d.hint);
+}
+
+// 标记用户手动修改
+$('#s3_endpoint, #s3_region').on('input', function() {
+    $(this).data('auto-filled', '0');
+});
+
+// 初始化：根据当前选择显示对应字段
+$('#storageType').trigger('change');
+
+// 保存配置
+$('#cloudForm').on('submit', function(e) {
+    e.preventDefault();
+    var type = $('#storageType').val();
+    var data = {};
+
+    if (type === 'upyun') {
+        data = {
+            type: 'upyun',
+            bucketName: $('[name="bucketName"]').val(),
+            operatorName: $('[name="operatorName"]').val(),
+            operatorPassword: $('[name="operatorPassword"]').val(),
+            operatorurl: $('[name="operatorurl"]').val()
+        };
+    } else if (type === 'aliyun') {
+        data = {
+            type: 'aliyun',
+            accessKeyId: $('[name="accessKeyId"]').val(),
+            accessKeySecret: $('[name="accessKeySecret"]').val(),
+            endpoint: $('[name="endpoint"]').val(),
+            bucket: $('[name="bucket"]').val(),
+            operatorurl: $('[name="operatorurl_aliyun"]').val()
+        };
+    } else {
+        data = {
+            type: 's3',
+            s3_provider: $('#s3_provider').val(),
+            endpoint: $('[name="s3_endpoint"]').val(),
+            region: $('[name="s3_region"]').val(),
+            accessKeyId: $('[name="s3_accessKeyId"]').val(),
+            accessKeySecret: $('[name="s3_accessKeySecret"]').val(),
+            bucket: $('[name="s3_bucket"]').val(),
+            operatorurl: $('[name="s3_operatorurl"]').val()
+        };
+    }
+
+    data.keep_local_after_cloud = $('[name="keep_local_after_cloud"]:checked').val() || '0';
+
+    ajaxRequest('/admin/cloudset/save', $.param(data), function(res) {
+        alert(res.msg);
+    }, {
+        requirePassword: true,
+        passwordMessage: '修改云存储密钥属于敏感操作，请输入管理员密码确认：'
+    });
+});
+
+// 测试连接
+function testConnection() {
+    if (!confirm('将使用当前保存的配置进行测试，确保已先保存配置。继续？')) return;
+    ajaxRequest('/admin/cloudset/test', {}, function(res) {
+        alert(res.msg);
+    });
+}
+</script>
+{/block}

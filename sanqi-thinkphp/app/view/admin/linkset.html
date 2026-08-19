@@ -1,0 +1,137 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{extend name="admin/layout" /}
+
+{block name="content"}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">友链列表</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>图标</th>
+                                <th>名称</th>
+                                <th>链接</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {volist name="links" id="link"}
+                            <tr>
+                                <td>{$link.id}</td>
+                                <td>
+                                    {notempty name="link.urlimg"}
+                                    <img src="{$link.urlimg}" alt="" style="width:30px;height:30px;object-fit:cover;">
+                                    {/notempty}
+                                </td>
+                                <td>{$link.urls}</td>
+                                <td><a href="{:sanitizeUrl($link['url'])}" target="_blank">{$link.url}</a></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary edit-btn" data-id="{$link.id}" data-name="{$link.urls|htmlentities}" data-url="{$link.url|htmlentities}" data-img="{$link.urlimg|htmlentities}">编辑</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteLink({$link.id})">删除</button>
+                                </td>
+                            </tr>
+                            {/volist}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0" id="formTitle">添加友链</h5>
+            </div>
+            <div class="card-body">
+                <form id="linkForm">
+                    <input type="hidden" id="linkId" name="id" value="">
+                    <div class="mb-3">
+                        <label class="form-label">名称</label>
+                        <input type="text" class="form-control" id="linkName" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">链接</label>
+                        <input type="url" class="form-control" id="linkUrl" name="url" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">图标URL</label>
+                        <input type="text" class="form-control" id="linkImg" name="img">
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="submitBtn">添加</button>
+                    <button type="button" class="btn btn-secondary w-100 mt-2" onclick="resetForm()" id="cancelBtn" style="display:none;">取消编辑</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{/block}
+
+{block name="extraJs"}
+<script>
+$('#linkForm').on('submit', function(e) {
+    e.preventDefault();
+    var id = $('#linkId').val();
+    var url = id ? '/admin/linkset/update' : '/admin/linkset/add';
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: $(this).serialize(),
+        dataType: 'json',
+        success: function(res) {
+            if (res && res.code === '200') {
+                alert(res.msg);
+                location.reload();
+            } else {
+                alert(res ? res.msg : '操作失败');
+            }
+        },
+        error: function() {
+            alert('网络错误');
+        }
+    });
+});
+
+$('.edit-btn').on('click', function() {
+    var $btn = $(this);
+    $('#linkId').val($btn.data('id'));
+    $('#linkName').val($btn.data('name'));
+    $('#linkUrl').val($btn.data('url'));
+    $('#linkImg').val($btn.data('img'));
+    $('#formTitle').text('编辑友链');
+    $('#submitBtn').text('保存');
+    $('#cancelBtn').show();
+});
+
+function resetForm() {
+    $('#linkId').val('');
+    $('#linkName').val('');
+    $('#linkUrl').val('');
+    $('#linkImg').val('');
+    $('#formTitle').text('添加友链');
+    $('#submitBtn').text('添加');
+    $('#cancelBtn').hide();
+}
+
+function deleteLink(id) {
+    confirmAction('确定要删除该友链吗？', function() {
+        ajaxRequest('/admin/linkset/delete', {id: id}, function() {
+            location.reload();
+        });
+    });
+}
+</script>
+{/block}

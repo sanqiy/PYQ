@@ -1,0 +1,153 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+{php}$csrfToken = session('allkey') ?? ''; if (empty($csrfToken)) { session('allkey', bin2hex(random_bytes(16))); $csrfToken = session('allkey'); }{/php}
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0, minimal-ui">
+<meta name="keywords" content="{$siteConfig.name|default=''}">
+<meta name="description" content="{$siteConfig.name|default=''}">
+<meta name="author" content="{$siteConfig.name|default=''}">
+<title>管理员登录 - {$siteConfig.name|default=''}</title>
+{notempty name="siteConfig.icon"}
+<link rel="shortcut icon" type="image/x-icon" href="{$siteConfig.icon}">
+{/notempty}
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-touch-fullscreen" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="format-detection" content="telephone=no">
+<meta http-equiv="x-rim-auto-match" content="none">
+<link rel="stylesheet" type="text/css" href="{:staticUrl('/admin/assets/css/materialdesignicons.min.css')}">
+<link rel="stylesheet" type="text/css" href="{:staticUrl('/admin/assets/css/bootstrap.min.css')}">
+<link rel="stylesheet" type="text/css" href="{:staticUrl('/admin/assets/css/animate.min.css')}">
+<link rel="stylesheet" type="text/css" href="{:staticUrl('/admin/assets/css/style.min.css')}">
+<style>
+.login-form .has-feedback {
+    position: relative;
+}
+.login-form .has-feedback .form-control {
+    padding-left: 36px;
+}
+.login-form .has-feedback .mdi {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: auto;
+    width: 36px;
+    height: 36px;
+    line-height: 36px;
+    z-index: 4;
+    color: #dcdcdc;
+    display: block;
+    text-align: center;
+    pointer-events: none;
+}
+.login-form .has-feedback.row .mdi {
+    left: 15px;
+}
+</style>
+</head>
+<body class="center-vh">
+<div class="card card-shadowed p-5 w-420 mb-0 mr-2 ml-2">
+  <div class="text-center mb-3">管理面板</div>
+
+  <form id="loginForm" class="login-form" autocomplete="off">
+    <input type="hidden" name="allkey" value="{$csrfToken}">
+    <div class="form-group has-feedback">
+      <span class="mdi mdi-account" aria-hidden="true"></span>
+      <input type="text" class="form-control" id="username" placeholder="账号" name="username" required="required" minlength="3" maxlength="32">
+    </div>
+
+    <div class="form-group has-feedback">
+      <span class="mdi mdi-lock" aria-hidden="true"></span>
+      <input type="password" class="form-control" id="password" placeholder="密码" name="password" required="required" minlength="3" maxlength="16">
+    </div>
+
+    <div class="form-group">
+      <button class="btn btn-block btn-primary" type="submit">立即登录</button>
+    </div>
+  </form>
+
+  <form id="twoFactorForm" class="login-form" autocomplete="off" style="display:none;">
+    <input type="hidden" name="allkey" value="{$csrfToken}">
+    <input type="hidden" name="token" id="twoFactorToken">
+    <div class="form-group">
+      <div class="alert alert-info py-2" id="twoFactorTip">请输入二步验证码</div>
+    </div>
+    <div class="form-group has-feedback">
+      <span class="mdi mdi-shield-key" aria-hidden="true"></span>
+      <input type="text" class="form-control" id="twoFactorCode" placeholder="验证码" name="code" required="required" minlength="6" maxlength="6">
+    </div>
+    <div class="form-group">
+      <button class="btn btn-block btn-primary" type="submit">完成验证</button>
+    </div>
+  </form>
+</div>
+
+<script type="text/javascript" src="{:staticUrl('/admin/assets/js/jquery.min.js')}"></script>
+<script type="text/javascript" src="{:staticUrl('/admin/assets/js/main.min.js')}"></script>
+<script>
+$.ajaxSetup({
+    beforeSend: function(xhr) {
+        var token = {:json_encode($csrfToken, JSON_UNESCAPED_UNICODE)};
+        if (token) xhr.setRequestHeader('X-CSRF-Token', token);
+    }
+});
+
+$('#loginForm').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+        url: '/admin/login/login',
+        type: 'POST',
+        data: $(this).serialize(),
+        dataType: 'json',
+        success: function(res) {
+            if (res && res.code === '200') {
+                if (res.requires_2fa) {
+                    $('#twoFactorToken').val(res.token || '');
+                    $('#twoFactorTip').text((res.method === 'totp') ? '请输入 TOTP 动态验证码' : '验证码已发送到管理员邮箱');
+                    $('#loginForm').hide();
+                    $('#twoFactorForm').show();
+                    $('#twoFactorCode').focus();
+                    return;
+                }
+                location.href = '/admin';
+            } else {
+                alert(res ? res.msg : '登录失败');
+            }
+        },
+        error: function() {
+            alert('网络错误');
+        }
+    });
+});
+
+$('#twoFactorForm').on('submit', function(e) {
+    e.preventDefault();
+    $.ajax({
+        url: '/admin/login/verify2fa',
+        type: 'POST',
+        data: $(this).serialize(),
+        dataType: 'json',
+        success: function(res) {
+            if (res && res.code === '200') {
+                location.href = '/admin';
+            } else {
+                alert(res ? res.msg : '验证失败');
+            }
+        },
+        error: function() {
+            alert('网络错误');
+        }
+    });
+});
+</script>
+</body>
+</html>

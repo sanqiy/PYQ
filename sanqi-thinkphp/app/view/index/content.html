@@ -1,0 +1,204 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{php}
+/**
+ * 首页内容视图
+ */
+{/php}
+
+<!-- 评论弹窗 -->
+<div style="display:none;position: absolute;top: -100%;" id="pinglunkfk">
+    <div class="sh-pinglunkuang" id="pinglunkuang">
+        <div class="sh-pinglun" id="sh-pinglun">
+            <!-- 游客模式 -->
+            {php}$lnkztFlag = isFlag($siteConfig['lnkzt'] ?? 0);{/php}
+            {if condition="empty($user) && $lnkztFlag === 0"}
+            <div class="sh-plk-yk" id="sh-plk-yk">
+                <div class="sh-plk-yk-z" style="margin-left: 8px;"><input id="vis_name" type="text" value="" maxlength="10" minlength="1" placeholder="昵称*" autocomplete="off"></div>
+                <div class="sh-plk-yk-zz"><input id="vis_email" type="text" value="" maxlength="100" minlength="1" placeholder="邮箱*" autocomplete="off"></div>
+                <div class="sh-plk-yk-z" style="margin-right: 8px;"><input id="vis_url" type="text" value="" maxlength="500" minlength="1" placeholder="网站" autocomplete="off"></div>
+            </div>
+            {/if}
+
+            <div class="sh-pinglun-s">
+                <textarea name="text" id="bletext" class="form-controll" placeholder="评论" required="" spellcheck="false" maxlength="500" onchange="this.value=this.value.substring(0, 500)" onkeydown="this.value=this.value.substring(0, 500)" onkeyup="this.value=this.value.substring(0, 500)" oninput="myjtbl()"></textarea>
+            </div>
+
+            <!-- 表情 -->
+            <div class="sh-pinglun-biao" id="biaoqing">
+                {include file="component/emoji_picker" /}
+            </div>
+            <!-- 表情 end-->
+
+            <!-- 表情开关与评论发送 -->
+            <div class="sh-pinglun-fs">
+                <div class="sh-pinglun-fs-right">
+                    <!-- 游客开关 -->
+                    {if condition="empty($user) && $lnkztFlag === 0"}
+                    <div class="sh-pinglun-fs-right-bqimg" id="ykkg" onclick="ykkg()">
+                        <i class="iconfont icon-yonghu1 ri-sxbqxz" id="sh-pinglun-fs-right-ykkgb" title="游客模式"></i>
+                    </div>
+                    {/if}
+                    <!-- 表情开关 -->
+                    <div class="sh-pinglun-fs-right-bqimg" id="bqkg" onclick="bqkg()">
+                        <i class="iconfont icon-biaoqing ri-sxbqxz" id="sh-pinglun-fs-right-bqimg"></i>
+                    </div>
+                    <!-- 发送按钮 -->
+                    <div class="sh-pinglun-fs-right-fs" id="sh-pinglun-fs-right-fs" onclick="fasong()">
+                        <span>发送</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 回复参数 -->
+        <div class="huifucanshu">
+            <p id="sh-tieid">-</p>
+            <p id="sh-tiehf">-</p>
+            <p id="sh-tieea">-</p>
+        </div>
+    </div>
+</div>
+
+<!-- 文章列表 -->
+<div class="sh-nrbk" id="sh-nrbk" style="width:100%">
+    {php}
+    // 显示置顶文章
+    if (!empty($topArticles)) {
+        foreach ($topArticles as $article) {
+            echo \think\facade\View::fetch('component/post_item', [
+                'post' => $article,
+                'user' => $user,
+                'siteConfig' => $siteConfig,
+                'postLikes' => $postLikes ?? [],
+                'postComments' => $postComments ?? [],
+                'postLikedMap' => $postLikedMap ?? []
+            ]);
+        }
+    }
+
+    // 显示普通文章
+    if (!empty($articles)) {
+        foreach ($articles as $article) {
+            echo \think\facade\View::fetch('component/post_item', [
+                'post' => $article,
+                'user' => $user,
+                'siteConfig' => $siteConfig,
+                'postLikes' => $postLikes ?? [],
+                'postComments' => $postComments ?? [],
+                'postLikedMap' => $postLikedMap ?? []
+            ]);
+        }
+    }
+    {/php}
+</div>
+
+<!-- 搜索弹窗 -->
+{php}$kqsyFlag = isFlag($siteConfig['kqsy'] ?? 0);{/php}
+{if condition="$kqsyFlag === 0"}
+<div class="sh-sousuo" id="sh-sousuo" style="display:none;">
+    <div class="sh-sousuo-main">
+        <div class="sh-sousuo-main-top">
+            <div class="sh-sousuo-main-top-input">
+                <input type="text" id="sousuo-input" placeholder="搜索文章" autocomplete="off">
+            </div>
+            <div class="sh-sousuo-main-top-btn" onclick="sousuo()">
+                <i class="iconfont icon-sousuo ri-sx"></i>
+            </div>
+            <div class="sh-sousuo-main-top-close" onclick="gbsousuo()">
+                <i class="iconfont icon-quxiao ri-sx"></i>
+            </div>
+        </div>
+    </div>
+</div>
+{/if}
+
+<!-- 友链弹窗 -->
+{if condition="$lnkztFlag === 0"}
+<div class="sh-link" id="sh-link-inline" onclick="gblink()" style="display:none;">
+    <div class="sh-link-main" onclick="hfljurl()">
+        <div class="sh-link-main-top">
+            <span>友情链接</span>
+            <div onclick="gblink()"><i class="iconfont icon-quxiao ri-sx"></i></div>
+        </div>
+        <div class="sh-link-main-content">
+            {volist name="links" id="link"}
+            <a href="{:sanitizeUrl($link['url'])}" target="_blank">
+                {notempty name="link.urlimg"}
+                <img src="{$link.urlimg}" alt="">
+                {/notempty}
+                <span>{$link.urls}</span>
+            </a>
+            {/volist}
+        </div>
+    </div>
+</div>
+{/if}
+
+<!-- 消息弹窗 -->
+{notempty name="user"}
+<div class="sh-news" id="sh-news-inline" onclick="gbnews()" style="display:none;">
+    <div class="sh-news-main" id="sh-news-main" onclick="hfljurl()">
+        <div class="sh-news-main-top">
+            <div class="sh-news-main-top-xiaoxih"><span>消息盒子</span></div>
+            <div class="sh-news-main-top-div sh-news-main-top-div2" onclick="event.stopPropagation();js_menu(event)">
+                <i class="iconfont icon-xialajiantouxiao ri-sxhqx"></i>
+                <div id="js_menu_inline" class="sh-news-main-top-div-menu" style="display: none;">
+                    <a href="javascript:;" onclick="xxscyd()" class="iconfont icon-icon-09 ri-sxhs">全部已读</a>
+                    <a href="javascript:;" onclick="xxsczt()" class="iconfont icon-xuanze ri-sxhs" id="xxsczt" lang="0">选择消息</a>
+                    <a href="javascript:;" onclick="xxscztqb()" class="iconfont icon-shanchu ri-sxhs">删除所有</a>
+                </div>
+            </div>
+        </div>
+        <div class="sh-news-main-content" id="sh-news-main-content">
+            {empty name="messages"}
+            <div class="sh-news-main-content-kong">
+                <p>暂无消息</p>
+            </div>
+            {else/}
+            {volist name="messages" id="msg"}
+            {php}$msgReadClass = isFlag($msg['msg'] ?? 0) === 0 ? 'sh-news-main-content-item-wd' : '';{/php}
+            <div class="sh-news-main-content-item {$msgReadClass}" id="xx-{$msg.id}">
+                <div class="sh-news-main-content-item-left">
+                    <img src="{$msg.fimg}" alt="">
+                </div>
+                <div class="sh-news-main-content-item-right">
+                    <div class="sh-news-main-content-item-right-top">
+                        <span>{$msg.fname}</span>
+                        <span>{$msg.title}</span>
+                    </div>
+                    <div class="sh-news-main-content-item-right-content">
+                        <p>{$msg.text}</p>
+                    </div>
+                    <div class="sh-news-main-content-item-right-time">
+                        <span>{:formatFriendlyDate($msg['ftime'])}</span>
+                    </div>
+                </div>
+            </div>
+            {/volist}
+            {/empty}
+        </div>
+    </div>
+</div>
+{/notempty}
+
+<!-- 浮动菜单 -->
+<div class="sh-fudong">
+    {if condition="$kqsyFlag === 0"}
+    <div class="sh-fudong-item" onclick="kqsousuo()">
+        <i class="iconfont icon-sousuo ri-sx"></i>
+    </div>
+    {/if}
+    <div class="sh-fudong-item" onclick="qiehuanys()">
+        <i class="iconfont icon-yejian ri-sx" id="sh-fudong-yejian"></i>
+    </div>
+    <div class="sh-fudong-item" onclick="huidingb()">
+        <i class="iconfont icon-huidingbu ri-sx"></i>
+    </div>
+</div>
+
+<input type="hidden" id="allkey" value="{$allkey}">

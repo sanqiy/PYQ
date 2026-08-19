@@ -1,0 +1,67 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{extend name="admin/layout" /}
+
+{block name="content"}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">后台二步验证</h5>
+    </div>
+    <div class="card-body">
+        <form id="securityForm">
+            <div class="mb-3">
+                <label class="form-label">启用状态</label>
+                <select class="form-select" name="enabled">
+                    <option value="0" {empty name="twoFactor.enabled"}selected{/empty}>关闭</option>
+                    <option value="1" {notempty name="twoFactor.enabled"}selected{/empty}>开启</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">验证方式</label>
+                <select class="form-select" name="method">
+                    <option value="email" {:($twoFactor['method'] ?? 'email') === 'email' ? 'selected' : ''}>邮箱验证码</option>
+                    <option value="totp" {:($twoFactor['method'] ?? '') === 'totp' ? 'selected' : ''}>TOTP 动态验证码</option>
+                </select>
+                <div class="form-text">邮箱验证码会发送到管理员账号绑定邮箱；TOTP 可使用 Google Authenticator、Microsoft Authenticator 等。</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">TOTP 密钥</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" value="{$totpSecret}" readonly id="totpSecret">
+                    <button type="button" class="btn btn-outline-secondary" onclick="regenerateTotp()">重新生成</button>
+                </div>
+                <div class="form-text">手动添加账号时填写该密钥：{$otpauth}</div>
+            </div>
+            <button type="submit" class="btn btn-primary">保存设置</button>
+        </form>
+    </div>
+</div>
+{/block}
+
+{block name="extraJs"}
+<script>
+document.getElementById('securityForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    ajaxRequest('/admin/security/save', $(this).serialize(), function(res) {
+        alert(res.msg);
+        location.reload();
+    });
+});
+
+function regenerateTotp() {
+    if (!confirm('重新生成后，旧的 TOTP 密钥会失效，确定继续？')) return;
+    ajaxRequest('/admin/security/regenerate-totp', {}, function(res) {
+        if (res.secret) {
+            document.getElementById('totpSecret').value = res.secret;
+        }
+        alert(res.msg);
+        location.reload();
+    });
+}
+</script>
+{/block}

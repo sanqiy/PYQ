@@ -1,0 +1,96 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{extend name="admin/layout" /}
+
+{block name="content"}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">数据库迁移</h5>
+        <button type="button" class="btn btn-success btn-sm" onclick="runMigrate()">执行迁移</button>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info mb-0">点击按钮执行 <code>database/migrate_*.sql</code> 中的迁移脚本。已执行过的语句会自动跳过，可安全重复运行。</div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">数据库备份</h5>
+        <button type="button" class="btn btn-primary btn-sm" onclick="createBackup()">立即备份</button>
+    </div>
+    <div class="card-body">
+        <div class="alert alert-info">备份文件保存于 <code>{$backupDir}</code>，该目录位于 Web 根目录外。</div>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>文件名</th>
+                        <th>大小</th>
+                        <th>创建时间</th>
+                        <th class="text-right">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {empty name="backups"}
+                    <tr><td colspan="4" class="text-center text-muted">暂无备份</td></tr>
+                    {/empty}
+                    {volist name="backups" id="backup"}
+                    <tr>
+                        <td>{$backup.name}</td>
+                        <td>{$backup.size}</td>
+                        <td>{$backup.time}</td>
+                        <td class="text-right">
+                            <button type="button" class="btn btn-sm btn-warning" onclick="restoreBackup('{$backup.name}')">恢复</button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteBackup('{$backup.name}')">删除</button>
+                        </td>
+                    </tr>
+                    {/volist}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{/block}
+
+{block name="extraJs"}
+<script>
+function runMigrate() {
+    if (!confirm('执行数据库迁移？已执行过的语句会自动跳过。')) return;
+    ajaxRequest('/admin/database/migrate', {}, function(res) {
+        alert(res.msg || '迁移完成');
+        location.reload();
+    });
+}
+function createBackup() {
+    ajaxRequest('/admin/database/backup', {}, function() {
+        alert('备份成功');
+        location.reload();
+    });
+}
+function restoreBackup(file) {
+    if (!confirm('恢复数据库会覆盖当前数据，继续？')) return;
+    ajaxRequest('/admin/database/restore', {file: file}, function() {
+        alert('恢复成功');
+        location.reload();
+    }, {
+        requirePassword: true,
+        passwordMessage: '恢复数据库属于高危操作，请输入管理员密码确认：'
+    });
+}
+function deleteBackup(file) {
+    if (!confirm('确定删除该备份？')) return;
+    ajaxRequest('/admin/database/delete', {file: file}, function() {
+        alert('删除成功');
+        location.reload();
+    }, {
+        requirePassword: true,
+        passwordMessage: '删除备份文件，请输入管理员密码确认：'
+    });
+}
+</script>
+{/block}

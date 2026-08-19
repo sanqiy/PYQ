@@ -1,0 +1,205 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{php}$csrfToken = $allkey ?? session('allkey') ?? '';{/php}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,minimum-scale=1.0, user-scalable=no minimal-ui">
+    <meta name="description" content="{$siteConfig.sign|default=''}">
+    <meta name="keywords" content="{$siteConfig.keywords|default=''}">
+    <meta name="author" content="{$siteConfig.name|default=''}">
+    <meta name="copyright" content="{$siteConfig.name|default=''}">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta name="robots" content="index,follow">
+    <meta name="format-detection" content="telephone=no">
+    <meta http-equiv="x-rim-auto-match" content="none">
+    <meta name="csrf-token" content="{$csrfToken}">
+    <title>{$pageTitle|default=$siteConfig.name|default='朋友圈'}</title>
+    {notempty name="siteConfig.icon"}
+    {php}$iconSafe = $siteConfig['icon'];{/php}
+    <link rel="apple-touch-icon" sizes="57x57" href="{$iconSafe}" />
+    <link rel="apple-touch-icon" sizes="114x114" href="{$iconSafe}" />
+    <link rel="apple-touch-icon" sizes="72x72" href="{$iconSafe}" />
+    <link rel="apple-touch-icon" sizes="144x144" href="{$iconSafe}" />
+    <link rel="icon" href="{$iconSafe}" type="image/x-icon" />
+    {/notempty}
+    {eq name="siteConfig.rosdomain|isFlag" value="1"}
+    <meta name="referrer" content="no-referrer">
+    {/eq}
+    {php}$iconfontUrl = $siteConfig['iconurl_url'] ?? '//at.alicdn.com/t/c/font_5202342_mzqrrjgq1y.css'; if (empty($iconfontUrl)) { $iconfontUrl = '//at.alicdn.com/t/c/font_5202342_mzqrrjgq1y.css'; }{/php}
+    <link rel="stylesheet" href="{$iconfontUrl}">
+    <link rel="stylesheet" type="text/css" href="{:staticUrl('/assets/css/style.css')}">
+    <link rel="stylesheet" type="text/css" href="{:staticUrl('/assets/mesg/dist/css/style.css')}">
+    <link rel="stylesheet" type="text/css" href="{:staticUrl('/assets/css/iconfont-fallback.css')}">
+    <link rel="stylesheet" type="text/css" href="{:staticUrl('/assets/css/jquery.fancybox.min.css')}">
+    {php}$siteFontFamily = siteFontFamily((string)($siteConfig['scfont'] ?? 'default'));{/php}
+    {notempty name="siteFontFamily"}
+    <style>
+    :root{--mm-font-family:{php}echo $siteFontFamily;{/php}}
+    body,.centent,button,input,textarea,select{font-family:var(--mm-font-family)}
+    </style>
+    {/notempty}
+    {:cleanHeadStyleHtml($siteConfig['scfontzt'] ?? '')}
+    {notempty name="extraCss"}
+    {$extraCss|raw}
+    {/notempty}
+</head>
+{php}$darkThemeActive = session('theme') === 'dark' || cookie('dark_theme') === 'dark-theme';{/php}
+<body class="{$darkThemeActive ? 'dark-theme' : ''}">
+    {php}
+    $pagepass = $siteConfig['pagepass'] ?? '';
+    if (isSitePasswordEnabled($pagepass)) {
+        if (!hasValidSitePasswordCookie($pagepass)) {
+            echo \think\facade\View::fetch('component/pagepass', ['siteConfig' => $siteConfig]);
+        }
+    }
+    {/php}
+
+    <div class="centent">
+        <div class="sh-main{$mainClass ? ' '.$mainClass : ''}">
+            <!-- 头部组件 -->
+            {empty name="hideHeader"}
+            {include file="component/header" /}
+            {/empty}
+
+            <!-- 主内容 -->
+            {__CONTENT__}
+
+            <!-- 底部加载更多 -->
+            {empty name="hideFooter"}
+            <div class="footer">
+                <div class="footer-text" id="footer-text-zt" onclick="hqgd()">加载更多..</div>
+                <p style="display:none" id="footer-text-hqgd">{$initialOffset|default=0}</p>
+            </div>
+            {/empty}
+        </div>
+
+        <!-- 搜索弹窗 -->
+        {eq name="siteConfig.search|isFlag" value="1"}
+        <div class="so" id="so" onclick="gbso()">
+            <form class="sobd" method="get" action="/" onclick="hfljurl()">
+                <input class="sobd-in" maxlength="50" autocomplete="off" placeholder="请输入关键字.." name="so" value="" type="text" required>
+                <button class="sobd-bu" type="submit">搜一搜</button>
+            </form>
+        </div>
+        {/eq}
+
+        <!-- 右下角悬浮菜单 -->
+        <div class="sh-menu" id="sh-menu">
+            {eq name="siteConfig.search|isFlag" value="1"}
+            <div class="sh-menu-k" id="searchbtn" onclick="kqso()"><i class="iconfont icon-sousuoxiao"></i></div>
+            {/eq}
+            {eq name="siteConfig.daymode|isFlag" value="1"}
+            {php}$darktheme = cookie('dark_theme');{/php}
+            {eq name="darktheme" value="dark-theme"}
+            <div class="sh-menu-k" id="day" lang="0" onclick="return dayModeToggle(event)"><i class="iconfont icon-yueliang" id="day-i"></i></div>
+            {else/}
+            <div class="sh-menu-k" id="day" lang="1" onclick="return dayModeToggle(event)"><i class="iconfont icon-ai250" id="day-i"></i></div>
+            {/eq}
+            {/eq}
+            {eq name="siteConfig.gotop|isFlag" value="1"}
+            <div class="sh-menu-k" id="scrtop" onclick="scrollToTop()"><i class="iconfont icon-weibiaoti-x-copy"></i></div>
+            {/eq}
+        </div>
+
+        <!-- 悬浮音乐播放器 -->
+        {include file="component/music_float" /}
+        {include file="component/news_modal" /}
+        {include file="component/link_modal" /}
+
+        <!-- 登录弹窗 -->
+        {include file="component/login_modal" /}
+
+        <!-- 版权信息 -->
+        <div class="sh-copyright">
+            <span class="sh-copyright-banquan" id="sh-copyright-banquan">{$siteConfig.copyright|default=''}</span>&nbsp;
+            {notempty name="siteConfig.beian"}
+            <span class="sh-copyright-banquan">{$siteConfig.beian}</span>
+            {/notempty}
+        </div>
+    </div>
+
+    <script type="text/javascript" id="script-id1">
+    window.__SANQI_CSRF_TOKEN__ = {:json_encode($csrfToken, JSON_UNESCAPED_UNICODE)};
+    var myallkeyVar = window.__SANQI_CSRF_TOKEN__;
+    window.__SANQI_LOGIN__ = {
+        isLogin: {php}echo !empty($user) ? 'true' : 'false';{/php},
+        username: {:json_encode($user['username'] ?? '', JSON_UNESCAPED_UNICODE)}
+    };
+    var scriptTag = document.getElementById("script-id1");
+    scriptTag.parentNode.removeChild(scriptTag);
+    </script>
+
+    <script type="text/javascript" src="{:staticUrl('/assets/js/common.js')}"></script>
+    <script type="text/javascript" src="{:staticUrl('/assets/js/modal.js')}"></script>
+    <script type="text/javascript" src="{:staticUrl('/assets/js/media.js')}"></script>
+    <script type="text/javascript" src="{:staticUrl('/assets/js/auth.js')}"></script>
+    <script type="text/javascript" src="{:staticUrl('/assets/js/comment.js')}"></script>
+    <script type="text/javascript" src="{:staticUrl('/assets/js/like.js')}"></script>
+    <script type="text/javascript" src="{:staticUrl('/assets/js/feed.js')}"></script>
+    <script type="text/javascript" src="{:staticUrl('/assets/js/notifications.js')}"></script>
+    <script type="text/javascript" src="{:staticUrl('/assets/js/index.js')}"></script>
+    <script type="text/javascript" src="{:staticUrl('/assets/js/jquery.min.js')}"></script>
+    <script>
+    // 全局CSRF Token自动注入（Header + Body）
+    (function() {
+        function getCsrfToken() {
+            if (window.__SANQI_CSRF_TOKEN__) return window.__SANQI_CSRF_TOKEN__;
+            if (window.myallkeyVar) return window.myallkeyVar;
+            var meta = document.querySelector('meta[name="csrf-token"]');
+            if (meta && meta.getAttribute('content')) return meta.getAttribute('content');
+            var input = document.getElementById('allkey');
+            return input && input.value ? input.value : '';
+        }
+        var csrfToken = getCsrfToken();
+        // jQuery AJAX自动附加Token
+        if (typeof $ !== 'undefined' && $.ajaxSetup) {
+            $.ajaxSetup({
+                beforeSend: function(xhr) {
+                    if (csrfToken) xhr.setRequestHeader('X-CSRF-Token', csrfToken);
+                }
+            });
+        }
+        // 原生XHR自动附加Token（Header + Body）
+        var origOpen = XMLHttpRequest.prototype.open;
+        var origSend = XMLHttpRequest.prototype.send;
+        XMLHttpRequest.prototype.open = function(method, url) {
+            this.__mmCsrfMethod = (method || '').toUpperCase();
+            return origOpen.apply(this, arguments);
+        };
+        XMLHttpRequest.prototype.send = function(body) {
+            if (this.__mmCsrfMethod === 'POST' && csrfToken) {
+                this.setRequestHeader('X-CSRF-Token', csrfToken);
+                if (typeof FormData !== 'undefined' && body instanceof FormData) {
+                    if (!body.has('allkey')) body.append('allkey', csrfToken);
+                } else if (typeof body === 'string' && !/(?:^|&)allkey=/.test(body)) {
+                    body = body + (body ? '&' : '') + 'allkey=' + encodeURIComponent(csrfToken);
+                }
+            }
+            return origSend.call(this, body);
+        };
+    })();
+    </script>
+    <script type="text/javascript" src="{:staticUrl('/assets/mesg/dist/js/sh-noytf.js')}"></script>
+    <script type="text/javascript" src="{:staticUrl('/assets/js/jquery.fancybox.min.js')}"></script>
+    <script type="text/javascript" src="{:staticUrl('/assets/js/qrcode.min.js')}"></script>
+    {notempty name="pageJs"}
+    {neq name="pageJs" value="index.js"}
+    <script type="text/javascript" src="{:staticUrl('/assets/js/'.$pageJs)}"></script>
+    {/neq}
+    {/notempty}
+    {notempty name="extraJs"}
+    {$extraJs|raw}
+    {/notempty}
+    {if condition="($siteConfig['norightclick'] ?? '0') == '1'"}
+    <script>document.addEventListener('contextmenu', function(e){ e.preventDefault(); });</script>
+    {/if}
+</body>
+</html>

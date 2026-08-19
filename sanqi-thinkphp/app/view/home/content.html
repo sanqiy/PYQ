@@ -1,0 +1,65 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{php}
+/**
+ * Personal home content, matching the legacy home.php timeline layout.
+ */
+{/php}
+
+<!-- 置顶模块 -->
+{include file="component/sticky_module" /}
+
+<div class="sh-homecontent" id="sh-nrbk">
+    {php}
+    if (!empty($articles)) {
+        $currentYear = '';
+
+        foreach ($articles as $article) {
+            $time = strtotime($article['ptptime'] ?? '') ?: time();
+            $year = date('Y', $time);
+
+            if ($year !== $currentYear) {
+                $currentYear = $year;
+                if ($year !== date('Y')) {
+                    echo '<h2 class="sh-homecontent-timed">' . $year . '<span class="sh-homecontent-timed-n">年</span></h2>';
+                }
+            }
+
+            echo \think\facade\View::fetch('component/timeline_item', [
+                'post' => $article,
+                'siteConfig' => $siteConfig,
+                'showAuditLock' => true,
+                'appendFms' => false
+            ]);
+        }
+    }
+    {/php}
+</div>
+
+<!-- Personal cover image uploader -->
+<div class="sh-resces-gl" id="sh-resces-gl" onclick="recgb()" style="display: none;">
+    <form action="/api/user/cover" method="post" enctype="multipart/form-data" onsubmit="return dosubmit()" id="myFormbg" class="sh-resces-gl-k" onclick="evjz()">
+        <input type="hidden" name="allkey" value="{$allkey|default=''}">
+        <div class="sh-resces-gl-s">
+            <span>修改相册封面</span>
+        </div>
+        <div class="sh-resces-gl-z">
+            <div class="sh-resces-gl-z-formup">
+                <img src="/assets/img/thumbnail.svg" data-src="" id="sh-resces-gl-z-formup-img" alt="">
+                <span id="sh-resces-gl-z-upload-btn">+</span>
+                <input type="file" name="file" accept="image/*" id="files" required>
+            </div>
+        </div>
+        <div class="sh-resces-gl-x" id="sctfm">
+            <input type="submit" name="submit" value="确认修改" onclick="sctfm()">
+        </div>
+    </form>
+</div>
+
+<input type="hidden" id="allkey" value="{$allkey}">
+<input type="hidden" id="timeline-user" value="">

@@ -1,0 +1,192 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{extend name="admin/layout" /}
+
+{block name="content"}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">表情列表</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>预览</th>
+                                <th>名称</th>
+                                <th>触发码</th>
+                                <th>文件名</th>
+                                <th>排序</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {volist name="emojis" id="emoji"}
+                            <tr>
+                                <td>{$emoji.id}</td>
+                                <td>
+                                    <img src="/assets/owo/{$emoji.category}/{$emoji.filename}" alt="" style="width:25px;height:25px;object-fit:cover;">
+                                </td>
+                                <td>{$emoji.name}</td>
+                                <td><code>{$emoji.code}</code></td>
+                                <td>{$emoji.filename}</td>
+                                <td>{$emoji.sort_order}</td>
+                                <td>
+                                    {if condition="$emoji.status == 1"}
+                                    <span class="badge badge-success" style="cursor:pointer;" onclick="toggleEmoji({$emoji.id})">启用</span>
+                                    {else}
+                                    <span class="badge badge-secondary" style="cursor:pointer;" onclick="toggleEmoji({$emoji.id})">禁用</span>
+                                    {/if}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editEmoji({$emoji.id}, {$emoji.name|json_encode}, {$emoji.code|json_encode}, {$emoji.filename|json_encode}, {$emoji.category|json_encode}, {$emoji.sort_order}, {$emoji.status})">编辑</button>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="deleteEmoji({$emoji.id})">删除</button>
+                                </td>
+                            </tr>
+                            {/volist}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0" id="formTitle">添加表情</h5>
+            </div>
+            <div class="card-body">
+                <form id="emojiForm">
+                    <input type="hidden" id="emojiId" name="id" value="">
+                    <div class="mb-3">
+                        <label class="form-label">名称</label>
+                        <input type="text" class="form-control" id="emojiName" name="name" placeholder="如：呵呵" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">触发码</label>
+                        <input type="text" class="form-control" id="emojiCode" name="code" placeholder="如：::(呵呵)" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">文件名</label>
+                        <input type="text" class="form-control" id="emojiFilename" name="filename" placeholder="如：E591B5E591B5_2x.png" required>
+                        <div class="mt-2" id="emojiPreview" style="display:none;">
+                            <img id="emojiPreviewImg" src="" alt="" style="width:32px;height:32px;">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">分类</label>
+                        <input type="text" class="form-control" id="emojiCategory" name="category" value="paopao">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">排序</label>
+                        <input type="number" class="form-control" id="emojiSort" name="sort_order" value="0">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">状态</label>
+                        <select class="form-control" id="emojiStatus" name="status">
+                            <option value="1">启用</option>
+                            <option value="0">禁用</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100" id="submitBtn">添加</button>
+                    <button type="button" class="btn btn-secondary w-100 mt-2" onclick="resetForm()" id="cancelBtn" style="display:none;">取消编辑</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{/block}
+
+{block name="extraJs"}
+<script>
+// 文件名输入时预览图片
+$('#emojiFilename').on('input', function() {
+    var filename = $(this).val();
+    var category = $('#emojiCategory').val() || 'paopao';
+    if (filename) {
+        $('#emojiPreviewImg').attr('src', '/assets/owo/' + category + '/' + filename);
+        $('#emojiPreview').show();
+    } else {
+        $('#emojiPreview').hide();
+    }
+});
+
+$('#emojiForm').on('submit', function(e) {
+    e.preventDefault();
+    var id = $('#emojiId').val();
+    var url = id ? '/admin/emojis/update' : '/admin/emojis/add';
+
+    $.ajax({
+        url: url,
+        type: 'POST',
+        data: $(this).serialize(),
+        dataType: 'json',
+        success: function(res) {
+            if (res && res.code === '200') {
+                alert(res.msg);
+                location.reload();
+            } else {
+                alert(res ? res.msg : '操作失败');
+            }
+        },
+        error: function() {
+            alert('网络错误');
+        }
+    });
+});
+
+function editEmoji(id, name, code, filename, category, sortOrder, status) {
+    $('#emojiId').val(id);
+    $('#emojiName').val(name);
+    $('#emojiCode').val(code);
+    $('#emojiFilename').val(filename);
+    $('#emojiCategory').val(category);
+    $('#emojiSort').val(sortOrder);
+    $('#emojiStatus').val(status);
+    $('#formTitle').text('编辑表情');
+    $('#submitBtn').text('保存');
+    $('#cancelBtn').show();
+    // 显示预览
+    $('#emojiPreviewImg').attr('src', '/assets/owo/' + category + '/' + filename);
+    $('#emojiPreview').show();
+}
+
+function resetForm() {
+    $('#emojiId').val('');
+    $('#emojiName').val('');
+    $('#emojiCode').val('');
+    $('#emojiFilename').val('');
+    $('#emojiCategory').val('paopao');
+    $('#emojiSort').val('0');
+    $('#emojiStatus').val('1');
+    $('#formTitle').text('添加表情');
+    $('#submitBtn').text('添加');
+    $('#cancelBtn').hide();
+    $('#emojiPreview').hide();
+}
+
+function deleteEmoji(id) {
+    confirmAction('确定要删除该表情吗？已发布内容中的表情将失效。', function() {
+        ajaxRequest('/admin/emojis/delete', {id: id}, function() {
+            location.reload();
+        });
+    });
+}
+
+function toggleEmoji(id) {
+    ajaxRequest('/admin/emojis/toggle', {id: id}, function() {
+        location.reload();
+    });
+}
+</script>
+{/block}

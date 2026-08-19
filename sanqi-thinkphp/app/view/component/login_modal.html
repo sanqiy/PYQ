@@ -1,0 +1,61 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+<!-- 登录弹窗 -->
+<div class="sh-login" id="sh-login" onclick="gblogin()">
+    <form class="sh-login-main" onsubmit="return false;" autocomplete="on" onclick="event.stopPropagation()">
+        <!-- 顶部 -->
+        <div class="sh-login-main-top">
+            <div class="sh-news-main-top-div" onclick="gblogin()"><i class="iconfont icon-quxiao al-sxb2h"></i></div>
+        </div>
+
+        <div class="sh-login-main-kko">
+            <div class="sh-login-main-kko-kok">
+                <p class="sh-login-main-kko-kok-p" id="zhdzsx">账号登录</p>
+                <!-- 中间 -->
+                <div class="sh-login-main-con">
+                    <div class="sh-login-main-con-anu">
+                        <p>账号</p>
+                        <input type="text" name="username" id="login-zh" spellcheck="false" minlength="3" maxlength="32" value="" placeholder="账号" autocomplete="username" autocapitalize="none" onKeyUp="value=value.replace(/[\W]/g,'')">
+                    </div>
+                    <div class="sh-login-main-con-anu" id="sh-login-main-con-anu" style="display:none;">
+                        <p>邮箱</p>
+                        <input type="email" name="email" id="login-email" spellcheck="false" maxlength="100" value="" placeholder="邮箱" autocomplete="email">
+                    </div>
+                    {eq name="siteConfig.regverify" value="1"}
+                    <div class="sh-login-main-con-anu" id="sh-login-main-con-yzmwk" style="display:none;">
+                        <p>验证码</p>
+                        <input type="text" name="yzm" id="login-yzm" spellcheck="false" maxlength="6" value="" placeholder="邮箱验证码">
+                        <button type="button" id="yzm" class="sh-yzm-btn">发送</button>
+                    </div>
+                    {/eq}
+                    <div class="sh-login-main-con-anu">
+                        <p>密码</p>
+                        <input type="password" name="password" id="login-pass" spellcheck="false" minlength="3" maxlength="16" value="" placeholder="密码" autocomplete="current-password">
+                    </div>
+                    <div class="sh-login-main-con-anu" id="login-2fa-box" style="display:none;">
+                        <p>验证码</p>
+                        <input type="text" name="admin_2fa_code" id="login-2fa-code" spellcheck="false" minlength="6" maxlength="6" value="" placeholder="二步验证码" autocomplete="one-time-code">
+                        <input type="hidden" id="login-2fa-token" value="">
+                    </div>
+                </div>
+                <!-- 底部 -->
+                <div class="sh-login-main-bot">
+                    <input type="submit" value="登录" class="sh-right" id="sh-left-dlzc" onclick="logy()">
+                </div>
+            </div>
+
+            <div class="sh-login-main-bottom">
+                <a href="javascript:;" onclick="zhmm()" onkeydown="return checkKeyDown(event)">忘记密码</a>
+                {eq name="siteConfig.regqx" value="0"}
+                <p></p>
+                <a href="javascript:;" id="sh-zck-an" onclick="zcanxy()" onkeydown="return checkKeyDown(event)">注册账号</a>
+                {/eq}
+            </div>
+        </div>
+    </form>
+</div>

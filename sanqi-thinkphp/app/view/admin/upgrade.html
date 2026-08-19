@@ -1,0 +1,134 @@
+<!--
+sanqi
+
+@copyright Copyright (c) sanqi
+@link      https://xaacn.com
+-->
+
+{extend name="admin/layout" /}
+
+{block name="content"}
+{php}
+$pending = $migration['pending'] ?? [];
+$logs = $migration['logs'] ?? [];
+{/php}
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">当前数据库版本</h5>
+                <p class="mb-1"><code>{$migration.current}</code></p>
+                <p class="text-muted mb-0">已记录 {$migration.executed} / {$migration.total} 个迁移</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">待执行迁移</h5>
+                <p class="mb-1" style="font-size:28px;font-weight:600;">{:count($pending)}</p>
+                <p class="text-muted mb-0">来源：<code>database/migrate_*.sql</code></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">执行操作</h5>
+                <button type="button" class="btn btn-success" onclick="runUpgradeMigrate()" {if condition="count($pending) == 0"}disabled{/if}>执行未完成迁移</button>
+                <p class="text-muted mt-2 mb-0">执行后会清理字段缓存、数据缓存和模板缓存。</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">未执行迁移</h5>
+        <span class="badge badge-info">{:count($pending)}</span>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>迁移文件</th>
+                        <th>状态</th>
+                        <th>修改时间</th>
+                        <th>Checksum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {empty name="pending"}
+                    <tr><td colspan="4" class="text-center text-muted">没有待执行迁移</td></tr>
+                    {/empty}
+                    {volist name="pending" id="item"}
+                    <tr>
+                        <td><code>{$item.migration}</code></td>
+                        <td><span class="badge badge-warning">{$item.status}</span></td>
+                        <td>{$item.mtime}</td>
+                        <td><small class="text-muted">{$item.checksum|substr=0,12}</small></td>
+                    </tr>
+                    {/volist}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">迁移日志</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>迁移文件</th>
+                        <th>状态</th>
+                        <th>耗时</th>
+                        <th>完成时间</th>
+                        <th>消息</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {empty name="logs"}
+                    <tr><td colspan="5" class="text-center text-muted">暂无迁移日志</td></tr>
+                    {/empty}
+                    {volist name="logs" id="log"}
+                    <tr>
+                        <td><code>{$log.migration}</code></td>
+                        <td>
+                            {if condition="$log.status == 'success'"}
+                            <span class="badge badge-success">success</span>
+                            {elseif condition="$log.status == 'skipped'" /}
+                            <span class="badge badge-secondary">skipped</span>
+                            {else /}
+                            <span class="badge badge-danger">{$log.status}</span>
+                            {/if}
+                        </td>
+                        <td>{$log.execution_ms} ms</td>
+                        <td>{$log.finished_at}</td>
+                        <td><small>{$log.message}</small></td>
+                    </tr>
+                    {/volist}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{/block}
+
+{block name="extraJs"}
+<script>
+function runUpgradeMigrate() {
+    if (!confirm('确定执行所有未完成迁移？建议先完成数据库备份。')) return;
+    ajaxRequest('/admin/upgrade/migrate', {}, function(res) {
+        alert(res.msg || '迁移完成');
+        location.reload();
+    });
+}
+</script>
+{/block}
